@@ -504,49 +504,90 @@ const EditChallenge = () => {
   const saveTrainingDays = async () => {
     if (!challengeId) return;
     
-    // Delete existing training days (cascades to exercises)
-    const { error: deleteError } = await supabase
+    // SMART UPDATE: Fetch existing days to preserve their IDs (prevents orphaning user progress)
+    const { data: existingDays, error: fetchError } = await supabase
       .from("challenge_training_days")
-      .delete()
-      .eq("challenge_id", challengeId);
+      .select("id, day_number")
+      .eq("challenge_id", challengeId)
+      .order("day_number");
 
-    if (deleteError) throw new Error(`Failed to delete old training days: ${deleteError.message}`);
+    if (fetchError) throw new Error(`Failed to fetch existing days: ${fetchError.message}`);
 
-    // Insert new training days
+    const existingDaysByNumber = new Map<number, string>();
+    existingDays?.forEach(d => existingDaysByNumber.set(d.day_number, d.id));
+
+    const processedDayNumbers = new Set<number>();
+
+    // Process each training day: UPDATE existing or INSERT new
     for (let i = 0; i < trainingDays.length; i++) {
       const day = trainingDays[i];
+      const dayNumber = i + 1;
       const durationSeconds = day.isRestDay ? 0 : calculateTrainingDayDuration(day.exercises);
+      
+      processedDayNumbers.add(dayNumber);
+      
+      // Check if this day_number already exists (preserving its ID)
+      const existingDayId = day.id || existingDaysByNumber.get(dayNumber);
 
-      const { data: trainingDayData, error: dayError } = await supabase
-        .from("challenge_training_days")
-        .insert({
-          challenge_id: challengeId,
-          day_number: i + 1,
-          title: day.title,
-          description: day.description,
-          is_rest_day: day.isRestDay || false,
-          duration_seconds: durationSeconds,
-        })
-        .select()
-        .single();
+      let trainingDayId: string;
 
-      if (dayError) {
-        console.error(`Failed to insert training day ${i + 1}:`, dayError);
-        throw new Error(`Failed to insert day ${i + 1}: ${dayError.message}`);
+      if (existingDayId) {
+        // UPDATE existing day (preserves ID and user progress references!)
+        const { error: updateError } = await supabase
+          .from("challenge_training_days")
+          .update({
+            title: day.title,
+            description: day.description,
+            is_rest_day: day.isRestDay || false,
+            duration_seconds: durationSeconds,
+          })
+          .eq("id", existingDayId);
+
+        if (updateError) {
+          console.error(`Failed to update training day ${dayNumber}:`, updateError);
+          throw new Error(`Failed to update day ${dayNumber}: ${updateError.message}`);
+        }
+        
+        trainingDayId = existingDayId;
+
+        // Delete existing exercises for this day (will re-insert)
+        await supabase
+          .from("training_day_exercises")
+          .delete()
+          .eq("training_day_id", trainingDayId);
+      } else {
+        // INSERT new day
+        const { data: trainingDayData, error: dayError } = await supabase
+          .from("challenge_training_days")
+          .insert({
+            challenge_id: challengeId,
+            day_number: dayNumber,
+            title: day.title,
+            description: day.description,
+            is_rest_day: day.isRestDay || false,
+            duration_seconds: durationSeconds,
+          })
+          .select()
+          .single();
+
+        if (dayError) {
+          console.error(`Failed to insert training day ${dayNumber}:`, dayError);
+          throw new Error(`Failed to insert day ${dayNumber}: ${dayError.message}`);
+        }
+        
+        trainingDayId = trainingDayData.id;
       }
 
       // Save exercises for this day
       if (day.exercises && day.exercises.length > 0) {
         const exerciseData = day.exercises.map((exercise, index) => ({
-          training_day_id: trainingDayData.id,
+          training_day_id: trainingDayId,
           figure_id: exercise.figure_id,
           order_index: exercise.order_index || index,
           sets: exercise.sets,
           reps: exercise.reps,
           hold_time_seconds: exercise.hold_time_seconds,
           rest_time_seconds: exercise.rest_time_seconds,
-          video_url: exercise.video_url,
-          audio_url: exercise.audio_url,
           notes: exercise.notes,
           play_video: exercise.play_video !== undefined ? exercise.play_video : true,
           video_position: exercise.video_position || "center",
@@ -556,7 +597,42 @@ const EditChallenge = () => {
           .from("training_day_exercises")
           .insert(exerciseData);
 
-        if (exerciseError) throw new Error(`Failed to insert exercises for day ${i + 1}: ${exerciseError.message}`);
+        if (exerciseError) throw new Error(`Failed to insert exercises for day ${dayNumber}: ${exerciseError.message}`);
+      }
+    }
+
+    // Handle days that were removed from the editor
+    // Only delete days that have no user progress (safety check)
+    for (const [dayNumber, dayId] of existingDaysByNumber) {
+      if (!processedDayNumbers.has(dayNumber)) {
+        // Check if this day has user progress
+        const { count, error: countError } = await supabase
+          .from("challenge_day_progress")
+          .select("id", { count: "exact", head: true })
+          .eq("training_day_id", dayId);
+
+        if (countError) {
+          console.error(`Failed to check progress for day ${dayNumber}:`, countError);
+        }
+
+        if (count && count > 0) {
+          // Day has user progress - warn admin but DON'T delete
+          toast({
+            title: "Warning",
+            description: `Day ${dayNumber} has ${count} user progress records and was not deleted. User progress would be lost.`,
+            variant: "destructive",
+          });
+        } else {
+          // Safe to delete - no user progress
+          const { error: deleteError } = await supabase
+            .from("challenge_training_days")
+            .delete()
+            .eq("id", dayId);
+
+          if (deleteError) {
+            console.error(`Failed to delete orphaned day ${dayNumber}:`, deleteError);
+          }
+        }
       }
     }
   };
