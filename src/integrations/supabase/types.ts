@@ -140,7 +140,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_challenge_day_progress_training_day"
+            columns: ["training_day_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_training_days"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       challenge_participants: {
         Row: {
