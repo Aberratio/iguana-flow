@@ -71,8 +71,6 @@ interface Exercise {
   reps?: number;
   hold_time_seconds?: number;
   rest_time_seconds?: number;
-  video_url?: string;
-  audio_url?: string;
   notes?: string;
   play_video?: boolean;
   video_position?: "center" | "top" | "bottom" | "left" | "right";
@@ -124,8 +122,6 @@ interface TrainingDayExercise {
   reps?: number;
   hold_time_seconds?: number;
   rest_time_seconds?: number;
-  video_url?: string;
-  audio_url?: string;
   notes?: string;
   play_video?: boolean;
   video_position?: "center" | "top" | "bottom" | "left" | "right";
@@ -282,8 +278,6 @@ const EditChallenge = () => {
                 reps: ex.reps,
                 hold_time_seconds: ex.hold_time_seconds,
                 rest_time_seconds: ex.rest_time_seconds,
-                video_url: ex.video_url,
-                audio_url: ex.audio_url,
                 notes: ex.notes,
                 play_video: ex.play_video,
                 video_position: ex.video_position,
