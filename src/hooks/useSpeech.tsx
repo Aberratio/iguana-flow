@@ -9,7 +9,9 @@ export const useSpeech = (isAudioEnabled: boolean) => {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
 
+      // Prefer Polish voices first, then fall back to English
       const selectedVoice =
+        voices.find((voice) => voice.lang.startsWith("pl")) ||
         voices.find(
           (voice) =>
             voice.lang.startsWith("en") &&
@@ -37,13 +39,17 @@ export const useSpeech = (isAudioEnabled: boolean) => {
   }, []);
 
   const speak = useCallback(
-    (text: string) => {
+    (text: string, lang?: string) => {
       if (!isAudioEnabled || !("speechSynthesis" in window)) return;
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1;
       utterance.pitch = 1;
       utterance.volume = 1;
+
+      if (lang) {
+        utterance.lang = lang;
+      }
 
       if (voiceRef.current) {
         utterance.voice = voiceRef.current;

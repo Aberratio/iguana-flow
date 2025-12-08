@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Hand,
   Volume2,
   VolumeX,
   Play,
@@ -11,6 +10,8 @@ import {
   Info,
   Share,
   RotateCcw,
+  MessageCircle,
+  MessageCircleOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +54,7 @@ interface Exercise {
     tags?: string[];
     hold_time_seconds?: number;
     description?: string;
+    video_position?: "center" | "top" | "bottom" | "left" | "right";
   };
 }
 
@@ -116,6 +118,11 @@ const ChallengeDayTimer = () => {
   const [isFigureModalOpen, setIsFigureModalOpen] = useState(false);
   const [showSharePostModal, setShowSharePostModal] = useState(false);
   const [challengeTitle, setChallengeTitle] = useState("");
+  const [audioInstructionsEnabled, setAudioInstructionsEnabled] = useState(() => {
+    return localStorage.getItem("challengeTimerAudioInstructions") === "true";
+  });
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const lastPlayedExerciseIndexRef = useRef<number>(-1);
 
   const { speak } = useSpeech(audioMode === "sound");
   const {
@@ -259,7 +266,8 @@ const ChallengeDayTimer = () => {
               *,
               figure:figures (
                 id, name, image_url, video_url, difficulty_level, category,
-                instructions, audio_url, type, tags, hold_time_seconds, description
+                instructions, audio_url, type, tags, hold_time_seconds, description,
+                video_position
               )
             `
           )
@@ -277,7 +285,8 @@ const ChallengeDayTimer = () => {
             rest_time_seconds: exercise.rest_time_seconds || 15,
             notes: exercise.notes,
             play_video: exercise.play_video,
-            video_position: exercise.video_position,
+            // Priority: training_day_exercises.video_position > figures.video_position > "center"
+            video_position: exercise.video_position || exercise.figure?.video_position || "center",
             figure: exercise.figure,
           })) || [];
 
@@ -495,6 +504,63 @@ const ChallengeDayTimer = () => {
       }, 100);
     }
   }, [currentSegmentIndex, isRunning, isPreparingToStart, segments]);
+
+  // Play exercise audio instructions when a new exercise segment starts
+  const playExerciseInstructions = useCallback((exercise: Exercise) => {
+    if (!audioInstructionsEnabled) return;
+    
+    // Stop any currently playing audio
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+    speechSynthesis.cancel();
+    
+    const figure = exercise.figure;
+    
+    if (figure.audio_url) {
+      // Option 1: Play the recorded audio file
+      const audio = new Audio(figure.audio_url);
+      audioPlayerRef.current = audio;
+      audio.play().catch(err => console.warn("Audio playback failed:", err));
+    } else if (figure.instructions) {
+      // Option 2: Read instructions using speech synthesis (in Polish)
+      const utterance = new SpeechSynthesisUtterance(figure.instructions);
+      utterance.lang = "pl-PL";
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    }
+  }, [audioInstructionsEnabled]);
+
+  // Auto-play instructions when a new exercise starts
+  useEffect(() => {
+    if (!isRunning || isPreparingToStart) return;
+    
+    const currentSegment = segments[currentSegmentIndex];
+    if (currentSegment?.type !== "exercise") return;
+    
+    const exerciseIndex = currentSegment.exerciseIndex;
+    
+    // Only play if this is a new exercise (not already played)
+    if (lastPlayedExerciseIndexRef.current === exerciseIndex) return;
+    lastPlayedExerciseIndexRef.current = exerciseIndex;
+    
+    const exercise = exercises[exerciseIndex];
+    if (exercise) {
+      playExerciseInstructions(exercise);
+    }
+  }, [currentSegmentIndex, isRunning, isPreparingToStart, segments, exercises, playExerciseInstructions]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
+      speechSynthesis.cancel();
+    };
+  }, []);
 
   // Auto-enter fullscreen when exercises are loaded
   const hasAttemptedAutoFullscreen = useRef(false);
@@ -1006,6 +1072,37 @@ const ChallengeDayTimer = () => {
                 </div>
               ) : (
                 <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />
+              )}
+            </Button>
+
+            {/* Audio Instructions Toggle */}
+            <Button
+              variant="ghost"
+              onClick={() => {
+                const newValue = !audioInstructionsEnabled;
+                setAudioInstructionsEnabled(newValue);
+                localStorage.setItem("challengeTimerAudioInstructions", newValue.toString());
+                toast({
+                  title: newValue ? "Instrukcje audio włączone" : "Instrukcje audio wyłączone",
+                  description: newValue 
+                    ? "Instrukcje do ćwiczeń będą odtwarzane automatycznie"
+                    : "Instrukcje nie będą odtwarzane",
+                });
+              }}
+              className={`text-white hover:bg-white/10 transition-all min-w-[44px] min-h-[44px] relative z-50 ${
+                audioInstructionsEnabled 
+                  ? "bg-blue-500/20 text-blue-400" 
+                  : "bg-white/5"
+              }`}
+              title={audioInstructionsEnabled 
+                ? "Instrukcje audio: Włączone - instrukcje są odtwarzane przy starcie ćwiczenia" 
+                : "Instrukcje audio: Wyłączone"
+              }
+            >
+              {audioInstructionsEnabled ? (
+                <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+              ) : (
+                <MessageCircleOff className="w-5 h-5 sm:w-6 sm:h-6" />
               )}
             </Button>
           </div>
