@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import SEO from "@/components/SEO";
 import SportSelectionModal from "@/components/SportSelectionModal";
 import SportCategoryManager from "@/components/SportCategoryManager";
+import SportPricingManager from "@/components/Admin/SportPricingManager";
 import {
   Sheet,
   SheetContent,
@@ -707,6 +708,13 @@ const AerialJourney = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Sport Pricing Manager - visible only in admin edit mode */}
+        {isAdmin && adminMode === "edit" && (
+          <div className="mt-6">
+            <SportPricingManager />
+          </div>
+        )}
 
         <SportSelectionModal
           isOpen={showSportSelectionModal}
