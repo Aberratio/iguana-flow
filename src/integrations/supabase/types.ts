@@ -1416,6 +1416,8 @@ export type Database = {
           is_published: boolean
           key_name: string
           name: string
+          price_pln: number | null
+          price_usd: number | null
           updated_at: string
         }
         Insert: {
@@ -1429,6 +1431,8 @@ export type Database = {
           is_published?: boolean
           key_name: string
           name: string
+          price_pln?: number | null
+          price_usd?: number | null
           updated_at?: string
         }
         Update: {
@@ -1442,6 +1446,8 @@ export type Database = {
           is_published?: boolean
           key_name?: string
           name?: string
+          price_pln?: number | null
+          price_usd?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1541,6 +1547,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          is_demo: boolean | null
           level_name: string
           level_number: number
           point_limit: number
@@ -1554,6 +1561,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          is_demo?: boolean | null
           level_name: string
           level_number: number
           point_limit?: number
@@ -1567,6 +1575,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          is_demo?: boolean | null
           level_name?: string
           level_number?: number
           point_limit?: number
@@ -1580,6 +1589,53 @@ export type Database = {
             columns: ["challenge_id"]
             isOneToOne: false
             referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sport_redemption_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          current_uses: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          sport_category_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          sport_category_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          sport_category_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sport_redemption_codes_sport_category_id_fkey"
+            columns: ["sport_category_id"]
+            isOneToOne: false
+            referencedRelation: "sport_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -2592,6 +2648,59 @@ export type Database = {
           },
         ]
       }
+      user_sport_purchases: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          id: string
+          notes: string | null
+          payment_amount: number | null
+          purchase_type: string
+          purchased_at: string | null
+          redemption_code: string | null
+          sport_category_id: string
+          stripe_session_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          notes?: string | null
+          payment_amount?: number | null
+          purchase_type?: string
+          purchased_at?: string | null
+          redemption_code?: string | null
+          sport_category_id: string
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          notes?: string | null
+          payment_amount?: number | null
+          purchase_type?: string
+          purchased_at?: string | null
+          redemption_code?: string | null
+          sport_category_id?: string
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sport_purchases_sport_category_id_fkey"
+            columns: ["sport_category_id"]
+            isOneToOne: false
+            referencedRelation: "sport_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_training_bookmarks: {
         Row: {
           created_at: string | null
@@ -2893,8 +3002,16 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      user_can_access_sport_level: {
+        Args: { p_level_id: string; p_user_id: string }
+        Returns: boolean
+      }
       user_has_challenge_access: {
         Args: { p_challenge_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      user_has_sport_path_access: {
+        Args: { p_sport_category_id: string; p_user_id: string }
         Returns: boolean
       }
     }
