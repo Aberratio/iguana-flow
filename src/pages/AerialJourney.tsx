@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import SEO from "@/components/SEO";
 import SportSelectionModal from "@/components/SportSelectionModal";
 import SportCategoryManager from "@/components/SportCategoryManager";
 import {
@@ -413,10 +414,15 @@ const AerialJourney = () => {
   }
 
   return (
+    <>
+      <SEO
+        title="Twoja Podróż Aerial"
+        description="Odkryj ścieżki treningowe i rozwijaj swoje umiejętności aerial step by step. Wybierz sport i rozpocznij swoją podróż!"
+        url="https://iguanaflow.app/aerial-journey"
+      />
     <div className="min-h-screen bg-gradient-to-tr from-black to-purple-950/10">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex items-center justify-between mb-6">
-          <div></div>
 
           {isAdmin && (
             <Card className="bg-black/20 border-white/10">
@@ -733,6 +739,7 @@ const AerialJourney = () => {
         </Sheet>
       </div>
     </div>
+    </>
   );
 };
 

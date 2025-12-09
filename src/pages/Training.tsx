@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import SEO from "@/components/SEO";
 const Training = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -187,6 +188,14 @@ const Training = () => {
   }
 
   return (
+    <>
+      <SEO
+        title="Sesje Treningowe"
+        description="Personalizowane sesje treningowe aerial dopasowane do Twojego poziomu. Twórz własne treningi i śledź postępy."
+        image="https://iguanaflow.app/og-training.jpg"
+        url="https://iguanaflow.app/training"
+        noIndex={true}
+      />
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         <div className="mb-6 sm:mb-8">
@@ -430,6 +439,7 @@ const Training = () => {
       />
 
     </div>
+    </>
   );
 };
 export default Training;

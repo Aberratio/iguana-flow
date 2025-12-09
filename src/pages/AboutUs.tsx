@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import InfoPageLayout from "@/components/Layout/InfoPageLayout";
+import SEO from "@/components/SEO";
 
 const AboutUs = () => {
   const content = {
@@ -121,9 +122,16 @@ lub wyślij e-mail na [hello@iguanaflow.com](mailto:hello@iguanaflow.com).
   };
 
   return (
-    <InfoPageLayout>
-      {renderMarkdown(content.content)}
-    </InfoPageLayout>
+    <>
+      <SEO
+        title="O Nas"
+        description="Poznaj zespół IguanaFlow i naszą misję wspierania sportowców aerial. Dołącz do społeczności pole dance i aerial hoop!"
+        url="https://iguanaflow.app/about-us"
+      />
+      <InfoPageLayout>
+        {renderMarkdown(content.content)}
+      </InfoPageLayout>
+    </>
   );
 };
 

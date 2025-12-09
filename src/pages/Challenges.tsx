@@ -33,6 +33,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useDictionary } from "@/contexts/DictionaryContext";
+import SEO from "@/components/SEO";
 
 interface Challenge {
   id: string;
@@ -626,7 +627,14 @@ const Challenges = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6">
+    <>
+      <SEO
+        title="Wyzwania Treningowe Aerial"
+        description="Dołącz do 28-dniowych wyzwań treningowych aerial! Buduj siłę, opanuj nowe figury pole dance i aerial hoop. Śledź postępy i osiągaj cele."
+        image="https://iguanaflow.app/og-challenges.jpg"
+        url="https://iguanaflow.app/challenges"
+      />
+      <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -851,6 +859,7 @@ const Challenges = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
