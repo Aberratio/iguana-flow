@@ -8,6 +8,7 @@ import TrainingLibraryCard from '@/components/TrainingLibraryCard';
 import TrainingLibraryFilters from '@/components/TrainingLibraryFilters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
+import SEO from '@/components/SEO';
 
 const TrainingLibrary = () => {
   const { user } = useAuth();
@@ -33,6 +34,13 @@ const TrainingLibrary = () => {
     (filters.premium !== null ? 1 : 0);
 
   return (
+    <>
+      <SEO
+        title="Biblioteka Treningów"
+        description="Odkrywaj treningi aerial dopasowane do Twoich potrzeb. Rozgrzewki, rozciąganie, siła i kondycja dla pole dance i aerial hoop."
+        image="https://iguanaflow.app/og-training.jpg"
+        url="https://iguanaflow.app/training-library"
+      />
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-950/10">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -123,6 +131,7 @@ const TrainingLibrary = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import InfoPageLayout from "@/components/Layout/InfoPageLayout";
+import SEO from "@/components/SEO";
 
 const PrivacyPolicy = () => {
   const content = {
@@ -138,9 +139,16 @@ Masz pytania? Skontaktuj się z nami:
   };
 
   return (
-    <InfoPageLayout>
-      {renderMarkdown(content.content)}
-    </InfoPageLayout>
+    <>
+      <SEO
+        title="Polityka Prywatności"
+        description="Dowiedz się jak IguanaFlow chroni Twoje dane osobowe. Przeczytaj naszą politykę prywatności i poznaj swoje prawa."
+        url="https://iguanaflow.app/privacy-policy"
+      />
+      <InfoPageLayout>
+        {renderMarkdown(content.content)}
+      </InfoPageLayout>
+    </>
   );
 };
 

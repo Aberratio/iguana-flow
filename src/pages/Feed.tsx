@@ -17,6 +17,8 @@ import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { formatDistanceToNow } from 'date-fns';
 import { PricingModal } from '@/components/PricingModal';
 import { MediaContainer } from '@/components/MediaContainer';
+import SEO from '@/components/SEO';
+
 const Feed = () => {
   const navigate = useNavigate();
   const [selectedPost, setSelectedPost] = useState(null);
@@ -104,7 +106,14 @@ const Feed = () => {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>;
   }
-  return <div className="min-h-screen p-6">
+  return <>
+      <SEO
+        title="Aktualności"
+        description="Zobacz co słychać w społeczności aerial! Inspiruj się postępami innych, dziel się swoimi osiągnięciami i bądź na bieżąco."
+        url="https://iguanaflow.app/feed"
+        noIndex={true}
+      />
+      <div className="min-h-screen p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between">
@@ -279,6 +288,7 @@ const Feed = () => {
       <SharePostModal isOpen={!!sharingPost} onClose={() => setSharingPost(null)} postId={sharingPost?.id || ''} userName={sharingPost?.user?.username || ''} post={sharingPost} />
 
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onUpgrade={() => {}} />
-    </div>;
+    </div>
+    </>;
 };
 export default Feed;

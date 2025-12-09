@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import InfoPageLayout from "@/components/Layout/InfoPageLayout";
+import SEO from "@/components/SEO";
 
 const TermsOfUse = () => {
   const content = {
@@ -131,9 +132,16 @@ Pytania? Skontaktuj się z nami:
   };
 
   return (
-    <InfoPageLayout>
-      {renderMarkdown(content.content)}
-    </InfoPageLayout>
+    <>
+      <SEO
+        title="Regulamin"
+        description="Zasady korzystania z platformy IguanaFlow. Przeczytaj regulamin przed rozpoczęciem treningów."
+        url="https://iguanaflow.app/terms-of-use"
+      />
+      <InfoPageLayout>
+        {renderMarkdown(content.content)}
+      </InfoPageLayout>
+    </>
   );
 };
 
