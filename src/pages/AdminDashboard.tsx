@@ -19,7 +19,8 @@ import {
   Activity,
   Target,
   Zap,
-  Calendar
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,6 +30,7 @@ import { SystemHealthSection } from '@/components/Admin/SystemHealthSection';
 import { TopUsersSection } from '@/components/Admin/TopUsersSection';
 import { RedemptionCodesSection } from '@/components/Admin/RedemptionCodesSection';
 import { UserRoleManager } from '@/components/Admin/UserRoleManager';
+import SportPricingManager from '@/components/Admin/SportPricingManager';
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -322,6 +324,11 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <UserRoleManager />
           <RedemptionCodesSection />
+        </div>
+
+        {/* Sport Pricing Section */}
+        <div className="mb-6">
+          <SportPricingManager />
         </div>
 
         {/* User Activity Stats */}
