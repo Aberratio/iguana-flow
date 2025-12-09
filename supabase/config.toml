@@ -56,5 +56,11 @@ ip_version = "ipv4"
 [functions.handle-stripe-webhook]
 verify_jwt = false
 
+[functions.purchase-sport-path]
+verify_jwt = true
+
+[functions.redeem-sport-code]
+verify_jwt = true
+
 [analytics]
 enabled = false
