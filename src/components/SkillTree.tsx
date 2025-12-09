@@ -128,6 +128,9 @@ const SkillTree = ({
   // Level trainings state
   const [levelTrainingCompletions, setLevelTrainingCompletions] = useState<{[levelId: string]: string[]}>({});
   const [trainingsPerLevel, setTrainingsPerLevel] = useState<{[levelId: string]: number}>({});
+  
+  // Free levels count from sport_categories
+  const [freeLevelsCount, setFreeLevelsCount] = useState<number>(0);
   useEffect(() => {
     const loadData = async () => {
       await fetchSportLevelsAndProgress();
@@ -136,9 +139,20 @@ const SkillTree = ({
       await fetchUserPoints(participations);
       await checkDemoAccess();
       await fetchUserAchievements();
+      await fetchFreeLevelsCount();
     };
     loadData();
   }, [sportCategory, user]);
+
+  const fetchFreeLevelsCount = async () => {
+    const { data } = await supabase
+      .from('sport_categories')
+      .select('free_levels_count')
+      .eq('key_name', sportCategory)
+      .single();
+    
+    setFreeLevelsCount(data?.free_levels_count || 0);
+  };
 
   const checkDemoAccess = async () => {
     if (!user) return;
@@ -741,7 +755,26 @@ const SkillTree = ({
           const isUnlocked = isLevelUnlocked(level, index);
           const progress = getLevelProgress(level);
           const isCompleted = progress === 100;
-          return <Card key={level.id} className={`transition-all duration-300 ${isUnlocked ? "bg-white/5 border-white/10 hover:border-purple-400/50" : "bg-gray-900/30 border-gray-600/20 opacity-60"}`}>
+          const isFirstPaidLevel = freeLevelsCount > 0 && index === freeLevelsCount;
+          
+          return (
+            <>
+              {/* Separator between free and paid levels */}
+              {isFirstPaidLevel && (
+                <div key={`separator-${level.id}`} className="relative py-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t-2 border-dashed border-amber-500/50" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium">
+                      <Lock className="w-3.5 h-3.5 mr-2" />
+                      Poziomy Premium — Wykup pełny dostęp
+                    </Badge>
+                  </div>
+                </div>
+              )}
+              
+              <Card key={level.id} className={`transition-all duration-300 ${isUnlocked ? "bg-white/5 border-white/10 hover:border-purple-400/50" : "bg-gray-900/30 border-gray-600/20 opacity-60"}`}>
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4">
                     <div className="flex items-center gap-3 md:gap-4">
@@ -1050,7 +1083,9 @@ const SkillTree = ({
                           </Card>}
                       </div>}
                 </CardContent>
-              </Card>;
+              </Card>
+            </>
+          );
         })}
         </div>
 

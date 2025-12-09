@@ -17,6 +17,7 @@ interface SportCategory {
   is_published: boolean;
   price_usd: number | null;
   price_pln: number | null;
+  free_levels_count: number | null;
 }
 
 interface SportLevel {
@@ -32,7 +33,7 @@ const SportPricingManager = () => {
   const [levels, setLevels] = useState<SportLevel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [editedPrices, setEditedPrices] = useState<Record<string, { usd: string; pln: string }>>({});
+  const [editedPrices, setEditedPrices] = useState<Record<string, { usd: string; pln: string; freeLevels: string }>>({});
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -46,11 +47,12 @@ const SportPricingManager = () => {
       if (sportsResult.data) {
         setSports(sportsResult.data);
         // Initialize edited prices
-        const prices: Record<string, { usd: string; pln: string }> = {};
+        const prices: Record<string, { usd: string; pln: string; freeLevels: string }> = {};
         sportsResult.data.forEach((sport) => {
           prices[sport.id] = {
             usd: ((sport.price_usd || 0) / 100).toFixed(2),
             pln: ((sport.price_pln || 0) / 100).toFixed(2),
+            freeLevels: String(sport.free_levels_count || 0),
           };
         });
         setEditedPrices(prices);
@@ -69,12 +71,12 @@ const SportPricingManager = () => {
     fetchData();
   }, []);
 
-  const handlePriceChange = (sportId: string, currency: "usd" | "pln", value: string) => {
+  const handlePriceChange = (sportId: string, field: "usd" | "pln" | "freeLevels", value: string) => {
     setEditedPrices((prev) => ({
       ...prev,
       [sportId]: {
         ...prev[sportId],
-        [currency]: value,
+        [field]: value,
       },
     }));
   };
@@ -85,30 +87,35 @@ const SportPricingManager = () => {
       const prices = editedPrices[sportId];
       const priceUsd = Math.round(parseFloat(prices.usd) * 100);
       const pricePln = Math.round(parseFloat(prices.pln) * 100);
+      const freeLevelsCount = parseInt(prices.freeLevels) || 0;
 
       const { error } = await supabase
         .from("sport_categories")
-        .update({ price_usd: priceUsd, price_pln: pricePln })
+        .update({ 
+          price_usd: priceUsd, 
+          price_pln: pricePln,
+          free_levels_count: freeLevelsCount
+        })
         .eq("id", sportId);
 
       if (error) throw error;
 
       toast({
         title: "Zapisano",
-        description: "Ceny zostały zaktualizowane",
+        description: "Ustawienia zostały zaktualizowane",
       });
 
       // Update local state
       setSports((prev) =>
         prev.map((s) =>
-          s.id === sportId ? { ...s, price_usd: priceUsd, price_pln: pricePln } : s
+          s.id === sportId ? { ...s, price_usd: priceUsd, price_pln: pricePln, free_levels_count: freeLevelsCount } : s
         )
       );
     } catch (error) {
       console.error("Error saving price:", error);
       toast({
         title: "Błąd",
-        description: "Nie udało się zapisać cen",
+        description: "Nie udało się zapisać ustawień",
         variant: "destructive",
       });
     } finally {
@@ -172,13 +179,14 @@ const SportPricingManager = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Cena USD</TableHead>
                   <TableHead>Cena PLN</TableHead>
+                  <TableHead>Darmowe poziomy</TableHead>
                   <TableHead>Akcje</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
@@ -215,6 +223,19 @@ const SportPricingManager = () => {
                             className="w-24"
                           />
                           <span className="text-muted-foreground">PLN</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={editedPrices[sport.id]?.freeLevels || "0"}
+                            onChange={(e) => handlePriceChange(sport.id, "freeLevels", e.target.value)}
+                            className="w-20"
+                          />
+                          <span className="text-xs text-muted-foreground">poziomów</span>
                         </div>
                       </TableCell>
                       <TableCell>

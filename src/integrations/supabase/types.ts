@@ -1409,6 +1409,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          free_levels_count: number | null
           icon: string | null
           id: string
           image_file_url: string | null
@@ -1424,6 +1425,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          free_levels_count?: number | null
           icon?: string | null
           id?: string
           image_file_url?: string | null
@@ -1439,6 +1441,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          free_levels_count?: number | null
           icon?: string | null
           id?: string
           image_file_url?: string | null
