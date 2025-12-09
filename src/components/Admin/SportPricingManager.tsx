@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Save, Loader2, RefreshCw } from "lucide-react";
+import { SportRedemptionCodeManager } from "./SportRedemptionCodeManager";
 
 interface SportCategory {
   id: string;
@@ -281,6 +282,9 @@ const SportPricingManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Redemption Codes */}
+      <SportRedemptionCodeManager />
     </div>
   );
 };

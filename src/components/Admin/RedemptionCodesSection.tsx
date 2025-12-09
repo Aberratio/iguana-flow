@@ -6,34 +6,35 @@ import { pl } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Ticket, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Ticket, CheckCircle2, XCircle } from 'lucide-react';
+
+interface SportCategory {
+  id: string;
+  name: string;
+}
 
 interface RedemptionCode {
   id: string;
   code: string;
-  challenge_id: string | null;
+  sport_category_id: string | null;
   max_uses: number | null;
   current_uses: number | null;
   is_active: boolean | null;
   expires_at: string | null;
-  challenge?: {
-    title: string;
-  };
+  sport_category?: SportCategory;
 }
 
 export const RedemptionCodesSection: React.FC = () => {
   const { data: codes, isLoading } = useQuery({
-    queryKey: ['admin-redemption-codes-overview'],
+    queryKey: ['admin-sport-redemption-codes-overview'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('challenge_redemption_codes')
+        .from('sport_redemption_codes')
         .select(`
           *,
-          challenge:challenges (
-            title
+          sport_category:sport_categories (
+            id, name
           )
         `)
         .order('current_uses', { ascending: false })
@@ -51,7 +52,7 @@ export const RedemptionCodesSection: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Ticket className="w-5 h-5" />
-            Kody promocyjne
+            Kody promocyjne sportów
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -68,18 +69,10 @@ export const RedemptionCodesSection: React.FC = () => {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Ticket className="w-5 h-5" />
-            Kody promocyjne
-          </CardTitle>
-          <Link to="/admin/redemption-codes">
-            <Button variant="ghost" size="sm" className="text-xs">
-              Zarządzaj
-              <ExternalLink className="w-3 h-3 ml-1" />
-            </Button>
-          </Link>
-        </div>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Ticket className="w-5 h-5" />
+          Kody promocyjne sportów
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -122,7 +115,7 @@ export const RedemptionCodesSection: React.FC = () => {
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="truncate">
-                    {code.challenge?.title || 'Brak przypisanego wyzwania'}
+                    {code.sport_category?.name || 'Brak sportu'}
                   </span>
                   {code.expires_at && (
                     <span className={isExpired ? 'text-red-400' : ''}>

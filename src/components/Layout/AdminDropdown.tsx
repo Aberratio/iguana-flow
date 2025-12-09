@@ -5,7 +5,6 @@ import {
   Trophy, 
   GraduationCap, 
   Globe, 
-  Ticket, 
   Settings, 
   UserCheck 
 } from 'lucide-react';
@@ -62,13 +61,6 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({ onImpersonateClick
           <Link to="/admin/landing-page" className="cursor-pointer">
             <Globe className="w-4 h-4 mr-2" />
             Landing Page Editor
-          </Link>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem asChild>
-          <Link to="/admin/redemption-codes" className="cursor-pointer">
-            <Ticket className="w-4 h-4 mr-2" />
-            Redemption Codes
           </Link>
         </DropdownMenuItem>
         

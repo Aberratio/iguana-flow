@@ -51,7 +51,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import ExerciseManagement from "@/components/ExerciseManagement";
-import RedemptionCodeManagement from "@/components/RedemptionCodeManagement";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { BulkDayCreator } from "@/components/BulkDayCreator";
 
@@ -1343,12 +1342,6 @@ const EditChallenge = () => {
           </div>
         </div>
 
-            {isPremium && challengeId && (
-              <RedemptionCodeManagement 
-                challengeId={challengeId}
-                challengeTitle={title}
-              />
-            )}
 
             {/* Footer Actions */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-white/10 p-3 sm:p-6 mt-6">
