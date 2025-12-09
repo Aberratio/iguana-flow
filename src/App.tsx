@@ -43,7 +43,6 @@ import AerialJourneyRoutes from "@/pages/AerialJourneyRoutes";
 
 import LandingPageManagement from "@/pages/LandingPageManagement";
 import SiteSettings from "@/pages/SiteSettings";
-import RedemptionCodeManager from "@/pages/RedemptionCodeManager";
 import TrainingManagement from "@/pages/TrainingManagement";
 import CreateTrainingCourse from "@/pages/CreateTrainingCourse";
 import PremiumRoute from "@/components/PremiumRoute";
@@ -417,14 +416,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <LandingPageManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/redemption-codes"
-        element={
-          <ProtectedRoute>
-            <RedemptionCodeManager />
           </ProtectedRoute>
         }
       />

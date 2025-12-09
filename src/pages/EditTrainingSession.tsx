@@ -28,7 +28,6 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SessionExerciseManager } from '@/components/SessionExerciseManager';
-import TrainingRedemptionCodeManagement from '@/components/TrainingRedemptionCodeManagement';
 import { ImageCropModal } from '@/components/ImageCropModal';
 
 const EditTrainingSession = () => {
@@ -459,13 +458,6 @@ const EditTrainingSession = () => {
               onExercisesChange={setSessionExercises}
             />
 
-            {/* Redemption Codes Section - only show for premium sessions */}
-            {formData.premium && (
-              <TrainingRedemptionCodeManagement 
-                trainingSessionId={sessionId}
-                onCodesUpdate={() => {}}
-              />
-            )}
           </div>
 
           {/* Sidebar */}
