@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,6 @@ interface SportPathPurchaseModalProps {
   onClose: () => void;
   sportCategoryId: string;
   sportName: string;
-  priceUsd: number | null;
   pricePln: number | null;
   onSuccess?: () => void;
 }
@@ -25,26 +23,24 @@ const SportPathPurchaseModal = ({
   onClose,
   sportCategoryId,
   sportName,
-  priceUsd,
   pricePln,
   onSuccess
 }: SportPathPurchaseModalProps) => {
-  const [currency, setCurrency] = useState<"usd" | "pln">("pln");
   const [isLoading, setIsLoading] = useState(false);
   const [redemptionCode, setRedemptionCode] = useState("");
   const { toast } = useToast();
 
-  const formatPrice = (cents: number | null, curr: string) => {
+  const formatPrice = (cents: number | null) => {
     if (!cents) return "N/A";
     const amount = cents / 100;
-    return curr === "pln" ? `${amount.toFixed(2)} PLN` : `$${amount.toFixed(2)}`;
+    return `${amount.toFixed(2)} PLN`;
   };
 
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("purchase-sport-path", {
-        body: { sportCategoryId, currency },
+        body: { sportCategoryId, currency: "pln" },
       });
 
       if (error) throw error;
@@ -104,8 +100,6 @@ const SportPathPurchaseModal = ({
     }
   };
 
-  const price = currency === "pln" ? pricePln : priceUsd;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -152,25 +146,15 @@ const SportPathPurchaseModal = ({
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <Select value={currency} onValueChange={(v) => setCurrency(v as "usd" | "pln")}>
-                    <SelectTrigger className="w-24">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pln">PLN</SelectItem>
-                      <SelectItem value="usd">USD</SelectItem>
-                    </SelectContent>
-                  </Select>
-
+                <div className="flex items-center justify-end">
                   <span className="text-2xl font-bold text-primary">
-                    {formatPrice(price, currency)}
+                    {formatPrice(pricePln)}
                   </span>
                 </div>
 
                 <Button 
                   onClick={handlePurchase} 
-                  disabled={isLoading || !price}
+                  disabled={isLoading || !pricePln}
                   className="w-full"
                   size="lg"
                 >
