@@ -14,6 +14,8 @@ import BreadcrumbNavigation from "@/components/Layout/BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import LevelTrainingsSection from "./SkillTree/LevelTrainingsSection";
+import SportPathPurchaseModal from "./SportPathPurchaseModal";
+import { useSportPathAccess } from "@/hooks/useSportPathAccess";
 interface Figure {
   id: string;
   name: string;
@@ -131,6 +133,17 @@ const SkillTree = ({
   
   // Free levels count from sport_categories
   const [freeLevelsCount, setFreeLevelsCount] = useState<number>(0);
+  
+  // Purchase modal state
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [sportCategoryInfo, setSportCategoryInfo] = useState<{
+    id: string;
+    pricePln: number | null;
+  } | null>(null);
+  
+  // Sport access hook
+  const { hasSportAccess, refetch: refetchAccess } = useSportPathAccess();
+  const hasFullAccess = hasSportAccess(sportCategory) === 'full';
   useEffect(() => {
     const loadData = async () => {
       await fetchSportLevelsAndProgress();
@@ -147,11 +160,17 @@ const SkillTree = ({
   const fetchFreeLevelsCount = async () => {
     const { data } = await supabase
       .from('sport_categories')
-      .select('free_levels_count')
+      .select('id, free_levels_count, price_pln')
       .eq('key_name', sportCategory)
       .single();
     
     setFreeLevelsCount(data?.free_levels_count || 0);
+    if (data) {
+      setSportCategoryInfo({
+        id: data.id,
+        pricePln: data.price_pln
+      });
+    }
   };
 
   const checkDemoAccess = async () => {
@@ -760,15 +779,19 @@ const SkillTree = ({
           return (
             <>
               {/* Separator between free and paid levels */}
-              {isFirstPaidLevel && (
-                <div key={`separator-${level.id}`} className="relative py-4">
+              {isFirstPaidLevel && !hasFullAccess && !adminPreviewMode && (
+                <div 
+                  key={`separator-${level.id}`} 
+                  className="relative py-4 cursor-pointer group"
+                  onClick={() => setIsPurchaseModalOpen(true)}
+                >
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t-2 border-dashed border-amber-500/50" />
+                    <div className="w-full border-t-2 border-dashed border-amber-500/50 group-hover:border-amber-400 transition-colors" />
                   </div>
                   <div className="relative flex justify-center">
-                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium">
+                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
                       <Lock className="w-3.5 h-3.5 mr-2" />
-                      Poziomy Premium — Wykup pełny dostęp
+                      Poziomy Premium — Kliknij aby wykupić dostęp
                     </Badge>
                   </div>
                 </div>
@@ -1091,6 +1114,19 @@ const SkillTree = ({
 
         {/* Figure Preview Modal */}
         {selectedFigure && <FigurePreviewModal figure={selectedFigure} isOpen={isPreviewModalOpen} onClose={handleClosePreviewModal} onFigureCompleted={handleFigureCompleted} />}
+        
+        {/* Sport Path Purchase Modal */}
+        <SportPathPurchaseModal
+          isOpen={isPurchaseModalOpen}
+          onClose={() => setIsPurchaseModalOpen(false)}
+          sportCategoryId={sportCategoryInfo?.id || ''}
+          sportName={sportName}
+          pricePln={sportCategoryInfo?.pricePln || null}
+          onSuccess={() => {
+            refetchAccess();
+            fetchSportLevelsAndProgress();
+          }}
+        />
       </div>
     </div>;
 };
