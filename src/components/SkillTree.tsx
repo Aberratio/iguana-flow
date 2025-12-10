@@ -148,7 +148,7 @@ const SkillTree = ({
   // Price formatting helper
   const formatPrice = (cents: number | null) => {
     if (!cents) return "N/A";
-    return `${(cents / 100).toFixed(2)} PLN`;
+    return `${(cents / 100).toFixed(2)} zł`;
   };
   useEffect(() => {
     const loadData = async () => {
