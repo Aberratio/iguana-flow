@@ -11,16 +11,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { SettingsModal } from "@/components/SettingsModal";
 import { User, Settings, LogOut } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const ProfileAvatar: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -82,22 +74,37 @@ const ProfileAvatar: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)} 
       />
 
-      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <AlertDialogContent className="bg-background/95 backdrop-blur-sm border-white/10">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Potwierdź wylogowanie</AlertDialogTitle>
-            <AlertDialogDescription>
-              Czy na pewno chcesz się wylogować?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout} className="bg-destructive hover:bg-destructive/90">
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="w-[95vw] max-w-sm glass-effect border-white/10">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+              <LogOut className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <DialogTitle className="text-center">
+              Wylogowanie
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Czy na pewno chcesz się wylogować z aplikacji?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              className="flex-1"
+            >
+              Anuluj
+            </Button>
+            <Button
+              onClick={handleLogout}
+              className="flex-1"
+            >
               Wyloguj
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

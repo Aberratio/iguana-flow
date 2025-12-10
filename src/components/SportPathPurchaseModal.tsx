@@ -33,7 +33,7 @@ const SportPathPurchaseModal = ({
   const formatPrice = (cents: number | null) => {
     if (!cents) return "N/A";
     const amount = cents / 100;
-    return `${amount.toFixed(2)} PLN`;
+    return `${amount.toFixed(2)} zł`;
   };
 
   const handlePurchase = async () => {
