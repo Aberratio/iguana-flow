@@ -144,6 +144,12 @@ const SkillTree = ({
   // Sport access hook
   const { hasSportAccess, refetch: refetchAccess } = useSportPathAccess();
   const hasFullAccess = hasSportAccess(sportCategory) === 'full';
+  
+  // Price formatting helper
+  const formatPrice = (cents: number | null) => {
+    if (!cents) return "N/A";
+    return `${(cents / 100).toFixed(2)} PLN`;
+  };
   useEffect(() => {
     const loadData = async () => {
       await fetchSportLevelsAndProgress();
@@ -770,34 +776,99 @@ const SkillTree = ({
           </Card>
         )}
 
+        {/* Purchase CTA Banner - for users without full access */}
+        {!hasFullAccess && !adminPreviewMode && freeLevelsCount > 0 && sportCategoryInfo?.pricePln && (
+          <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30 mb-6">
+            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-amber-400 flex items-center gap-2">
+                  <Crown className="w-5 h-5" />
+                  Odblokuj pełną ścieżkę {sportName}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Dostęp do {sportLevels.length - freeLevelsCount} płatnych poziomów za jednorazową opłatą
+                </p>
+              </div>
+              <Button 
+                onClick={() => setIsPurchaseModalOpen(true)}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold whitespace-nowrap"
+              >
+                Wykup dostęp - {formatPrice(sportCategoryInfo.pricePln)}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {sportLevels.map((level, index) => {
           const isUnlocked = isLevelUnlocked(level, index);
           const progress = getLevelProgress(level);
           const isCompleted = progress === 100;
           const isFirstPaidLevel = freeLevelsCount > 0 && index === freeLevelsCount;
+          const isFreeLevel = level.level_number <= freeLevelsCount;
+          const isPaidLevelLocked = !isFreeLevel && !hasFullAccess && !adminPreviewMode;
           
           return (
             <>
-              {/* Separator between free and paid levels */}
-              {isFirstPaidLevel && !hasFullAccess && !adminPreviewMode && (
+              {/* Separator between free and paid levels - always visible when freeLevelsCount > 0 */}
+              {isFirstPaidLevel && freeLevelsCount > 0 && (
                 <div 
                   key={`separator-${level.id}`} 
-                  className="relative py-4 cursor-pointer group"
-                  onClick={() => setIsPurchaseModalOpen(true)}
+                  className={cn(
+                    "relative py-6",
+                    !hasFullAccess && !adminPreviewMode && "cursor-pointer group"
+                  )}
+                  onClick={() => !hasFullAccess && !adminPreviewMode && setIsPurchaseModalOpen(true)}
                 >
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t-2 border-dashed border-amber-500/50 group-hover:border-amber-400 transition-colors" />
+                    <div className={cn(
+                      "w-full border-t-2 border-dashed transition-colors",
+                      hasFullAccess || adminPreviewMode 
+                        ? "border-green-500/50" 
+                        : "border-amber-500/50 group-hover:border-amber-400"
+                    )} />
                   </div>
                   <div className="relative flex justify-center">
-                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
-                      <Lock className="w-3.5 h-3.5 mr-2" />
-                      Poziomy Premium — Kliknij aby wykupić dostęp
-                    </Badge>
+                    <div className="bg-black px-4 py-2 rounded-lg">
+                      {hasFullAccess || adminPreviewMode ? (
+                        <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30 px-4 py-1.5 text-sm font-medium">
+                          <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                          Pełny dostęp odblokowany
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
+                          <Lock className="w-3.5 h-3.5 mr-2" />
+                          Poziomy Premium — Kliknij aby wykupić ({formatPrice(sportCategoryInfo?.pricePln)})
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
               
-              <Card key={level.id} className={`transition-all duration-300 ${isUnlocked ? "bg-white/5 border-white/10 hover:border-purple-400/50" : "bg-gray-900/30 border-gray-600/20 opacity-60"}`}>
+              <Card key={level.id} className={cn(
+                "transition-all duration-300 relative",
+                isUnlocked 
+                  ? "bg-white/5 border-white/10 hover:border-purple-400/50" 
+                  : isPaidLevelLocked 
+                    ? "bg-amber-900/10 border-amber-500/20" 
+                    : "bg-gray-900/30 border-gray-600/20 opacity-60"
+              )}>
+                {/* Locked overlay for paid levels */}
+                {isPaidLevelLocked && (
+                  <div 
+                    className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-lg cursor-pointer hover:bg-black/50 transition-colors"
+                    onClick={() => setIsPurchaseModalOpen(true)}
+                  >
+                    <Lock className="w-10 h-10 text-amber-400 mb-2" />
+                    <p className="text-amber-400 font-medium mb-2">Poziom Premium</p>
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold"
+                    >
+                      Wykup dostęp
+                    </Button>
+                  </div>
+                )}
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4">
                     <div className="flex items-center gap-3 md:gap-4">
@@ -807,9 +878,25 @@ const SkillTree = ({
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
-                          {level.level_name}
-                        </h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
+                            {level.level_name}
+                          </h3>
+                          {/* Free/Premium Badge */}
+                          {freeLevelsCount > 0 && (
+                            isFreeLevel ? (
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Bezpłatny
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                                <Crown className="w-3 h-3 mr-1" />
+                                Premium
+                              </Badge>
+                            )
+                          )}
+                        </div>
                         {level.description && isUnlocked && <p className="text-xs md:text-sm text-muted-foreground mt-1">
                             {level.description}
                           </p>}
@@ -835,7 +922,7 @@ const SkillTree = ({
                           </div>}
                       </div> : <div className="flex items-center gap-2 text-gray-500 ml-auto">
                         <Lock className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-xs md:text-sm">Zablokowane</span>
+                        <span className="text-xs md:text-sm">{isPaidLevelLocked ? 'Wymaga zakupu' : 'Zablokowane'}</span>
                       </div>}
                   </div>
 
