@@ -799,404 +799,645 @@ const SkillTree = ({
           </Card>
         )}
 
-        {sportLevels.map((level, index) => {
+        {/* Free Levels */}
+        {sportLevels.filter(level => level.level_number <= freeLevelsCount).map((level, index) => {
           const isUnlocked = isLevelUnlocked(level, index);
           const progress = getLevelProgress(level);
           const isCompleted = progress === 100;
-          const isFirstPaidLevel = freeLevelsCount > 0 && index === freeLevelsCount;
-          const isFreeLevel = level.level_number <= freeLevelsCount;
-          const isPaidLevelLocked = !isFreeLevel && !hasFullAccess && !adminPreviewMode;
           
           return (
-            <>
-              {/* Separator between free and paid levels - always visible when freeLevelsCount > 0 */}
-              {isFirstPaidLevel && freeLevelsCount > 0 && (
-                <div 
-                  key={`separator-${level.id}`} 
-                  className={cn(
-                    "relative py-6",
-                    !hasFullAccess && !adminPreviewMode && "cursor-pointer group"
-                  )}
-                  onClick={() => !hasFullAccess && !adminPreviewMode && setIsPurchaseModalOpen(true)}
-                >
-                  <div className="absolute inset-0 flex items-center">
-                    <div className={cn(
-                      "w-full border-t-2 border-dashed transition-colors",
-                      hasFullAccess || adminPreviewMode 
-                        ? "border-green-500/50" 
-                        : "border-amber-500/50 group-hover:border-amber-400"
-                    )} />
-                  </div>
-                  <div className="relative flex justify-center">
-                    <div className="bg-black px-4 py-2 rounded-lg">
-                      {hasFullAccess || adminPreviewMode ? (
-                        <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30 px-4 py-1.5 text-sm font-medium">
-                          <CheckCircle className="w-3.5 h-3.5 mr-2" />
-                          Pełny dostęp odblokowany
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
-                          <Lock className="w-3.5 h-3.5 mr-2" />
-                          Poziomy Premium — Kliknij aby wykupić ({formatPrice(sportCategoryInfo?.pricePln)})
-                        </Badge>
-                      )}
+            <Card key={level.id} className={cn(
+              "transition-all duration-300 relative",
+              isUnlocked 
+                ? "bg-white/5 border-white/10 hover:border-purple-400/50" 
+                : "bg-gray-900/30 border-gray-600/20 opacity-60"
+            )}>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0 ${isCompleted ? "bg-gradient-to-r from-green-400 to-emerald-400 text-black" : isUnlocked ? "bg-gradient-to-r from-purple-400 to-blue-400 text-white" : "bg-gray-600 text-gray-400"}`}>
+                      {isCompleted ? <Crown className="w-5 h-5 md:w-6 md:h-6" /> : level.level_number}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
+                          {level.level_name}
+                        </h3>
+                        {freeLevelsCount > 0 && (
+                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Bezpłatny
+                          </Badge>
+                        )}
+                      </div>
+                      {level.description && isUnlocked && <p className="text-xs md:text-sm text-muted-foreground mt-1">{level.description}</p>}
+                      {isUnlocked && <p className="text-xs md:text-sm text-muted-foreground">
+                        {level.figures.length} figur
+                        {trainingsPerLevel[level.id] > 0 && `, ${trainingsPerLevel[level.id]} treningów`}
+                      </p>}
                     </div>
                   </div>
+                  {isUnlocked ? (
+                    <div className="flex items-center justify-end md:text-right ml-auto">
+                      {isCompleted ? (
+                        <div className="flex items-center gap-2 text-green-400">
+                          <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
+                          <span className="text-xs md:text-sm font-medium">Ukończone</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-blue-400">
+                          <Circle className="w-4 h-4 md:w-5 md:h-5" />
+                          <span className="text-xs md:text-sm font-medium whitespace-nowrap">{progress}% ukończone</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-gray-500 ml-auto">
+                      <Lock className="w-4 h-4 md:w-5 md:h-5" />
+                      <span className="text-xs md:text-sm">Zablokowane</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              <Card key={level.id} className={cn(
-                "transition-all duration-300 relative",
-                isUnlocked 
-                  ? "bg-white/5 border-white/10 hover:border-purple-400/50" 
-                  : isPaidLevelLocked 
-                    ? "bg-amber-900/10 border-amber-500/20" 
-                    : "bg-gray-900/30 border-gray-600/20 opacity-60"
-              )}>
-                {/* Locked overlay for paid levels */}
-                {isPaidLevelLocked && (
-                  <div 
-                    className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-lg cursor-pointer hover:bg-black/50 transition-colors"
-                    onClick={() => setIsPurchaseModalOpen(true)}
-                  >
-                    <Lock className="w-10 h-10 text-amber-400 mb-2" />
-                    <p className="text-amber-400 font-medium mb-2">Poziom Premium</p>
-                    <Button 
-                      size="sm" 
-                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold"
-                    >
-                      Wykup dostęp
-                    </Button>
+
+                {isUnlocked && !isCompleted && (
+                  <div className="mb-4">
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div className="bg-gradient-to-r from-purple-400 to-blue-400 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                    </div>
                   </div>
                 )}
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      {/* Level Badge */}
-                      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0 ${isCompleted ? "bg-gradient-to-r from-green-400 to-emerald-400 text-black" : isUnlocked ? "bg-gradient-to-r from-purple-400 to-blue-400 text-white" : "bg-gray-600 text-gray-400"}`}>
-                        {isCompleted ? <Crown className="w-5 h-5 md:w-6 md:h-6" /> : level.level_number}
-                      </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
-                            {level.level_name}
-                          </h3>
-                          {/* Free/Premium Badge */}
-                          {freeLevelsCount > 0 && (
-                            isFreeLevel ? (
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Bezpłatny
-                              </Badge>
-                            ) : (
+                {level.challenges && isUnlocked && (
+                  <div className="mt-4 p-4 bg-purple-900/20 border border-purple-400/20 rounded-lg mb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-purple-400 mb-1">Dostępne wyzwanie</h4>
+                        <p className="text-sm text-muted-foreground">{level.challenges.title}</p>
+                      </div>
+                      <div className="text-right">
+                        {(() => {
+                          const challengeParticipation = userChallengeParticipations[level.challenge_id!];
+                          if (challengeParticipation?.completed === true || challengeParticipation?.status === "completed") {
+                            return (
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                  <Trophy className="w-3 h-3 mr-1" />
+                                  Ukończone
+                                </Badge>
+                              </div>
+                            );
+                          }
+                          if (challengeParticipation?.participating && !challengeParticipation?.completed && challengeParticipation?.status === "active") {
+                            return (
+                              <Button size="sm" variant="outline" onClick={() => navigate(`/challenges/${level.challenge_id}`)} className="border-purple-400/30 text-purple-400 hover:bg-purple-400/10">
+                                Kontynuuj wyzwanie
+                              </Button>
+                            );
+                          }
+                          if (!challengeParticipation?.participating) {
+                            return (
+                              <Button size="sm" onClick={() => joinChallenge(level.challenge_id!)} disabled={joiningChallenge === level.challenge_id} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                                {joiningChallenge === level.challenge_id ? "Dołączanie..." : "Rozpocznij wyzwanie"}
+                              </Button>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {level.achievements && level.achievements.length > 0 && isUnlocked && (
+                  <div className="mt-8 pt-6 border-t border-emerald-400/20">
+                    <h4 className="text-emerald-400 font-semibold mb-4 flex items-center gap-2 text-sm md:text-base">
+                      <span className="text-xl">🎖️</span>
+                      Odznaki za ukończenie poziomu
+                    </h4>
+                    <TooltipProvider>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+                        {level.achievements.map(achievement => {
+                          const isEarned = userAchievements?.includes(achievement.id);
+                          return (
+                            <Tooltip key={achievement.id}>
+                              <TooltipTrigger asChild>
+                                <div className={cn("relative p-4 rounded-xl text-center transition-all cursor-pointer", "bg-gradient-to-br from-emerald-900/30 to-purple-900/30", "border border-emerald-400/30 hover:border-emerald-400/50", isEarned && "ring-2 ring-emerald-400/50 shadow-lg shadow-emerald-400/20")}>
+                                  <div className="text-4xl md:text-5xl mb-2">{achievement.icon}</div>
+                                  <p className="text-white font-medium text-sm md:text-base truncate">{achievement.name}</p>
+                                  <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">+{achievement.points} pkt</div>
+                                  {isEarned && <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center"><CheckCircle className="w-4 h-4 text-white" /></div>}
+                                  {!isEarned && <div className="absolute inset-0 rounded-xl bg-black/50 flex items-center justify-center"><p className="text-xs text-gray-300 px-2">Odblokuj ukończając poziom</p></div>}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-semibold">{achievement.name}</p>
+                                <p className="text-xs text-muted-foreground">+{achievement.points} punktów</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
+                    </TooltipProvider>
+                  </div>
+                )}
+
+                {isUnlocked && (
+                  <>
+                    {Object.entries(level.figures.filter(f => !f.is_boss && f.type !== "transitions").reduce((acc, fig) => {
+                      const sublevelKey = fig.sublevel || 1;
+                      if (!acc[sublevelKey]) acc[sublevelKey] = [];
+                      acc[sublevelKey].push(fig);
+                      return acc;
+                    }, {} as { [key: number]: Figure[] })).sort(([a], [b]) => Number(a) - Number(b)).map(([sublevelStr, figures], idx) => {
+                      const sublevelNum = Number(sublevelStr);
+                      const canAccess = canAccessSublevel(level, sublevelNum);
+                      const firstFigure = figures[0];
+                      return (
+                        <div key={sublevelStr}>
+                          {idx > 0 && <div className="my-4 border-t-2 border-dashed border-purple-400/30" />}
+                          {sublevelNum > 1 && (
+                            <div className="mb-3">
+                              {firstFigure?.sublevel_description && canAccess && <p className="text-sm text-muted-foreground mt-1 ml-1">{firstFigure.sublevel_description}</p>}
+                            </div>
+                          )}
+                          <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 ${!canAccess ? "opacity-50 pointer-events-none" : ""}`}>
+                            {figures.map(figure => {
+                              const figureProgress = getFigureProgress(figure.id);
+                              const canPractice = isUnlocked && canAccessFigure(figure) && canAccess;
+                              return (
+                                <div key={figure.id} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${canPractice ? "hover:scale-105" : "opacity-60"}`} onClick={() => handleFigureClick(figure, canPractice)}>
+                                  {figure.image_url ? <img src={figure.image_url} alt={figure.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="text-2xl">🤸</span></div>}
+                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    {figureProgress?.status === "completed" ? <CheckCircle className="w-8 h-8 text-green-400" /> : figureProgress?.status === "for_later" ? <Bookmark className="w-6 h-6 text-blue-400" /> : figureProgress?.status === "failed" ? <AlertCircle className="w-6 h-6 text-red-400" /> : canPractice ? <Circle className="w-6 h-6 text-white/60" /> : <Lock className="w-6 h-6 text-gray-400" />}
+                                  </div>
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2">
+                                    <p className="text-white text-xs font-medium truncate">{figure.name}</p>
+                                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                      {(figure.level_hold_time_seconds || figure.hold_time_seconds) && <div className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{figure.level_hold_time_seconds || figure.hold_time_seconds}s</div>}
+                                      {figure.level_reps && <div className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{figure.level_reps}x</div>}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {isUnlocked && level.figures.some(f => f.is_boss) && (
+                  <div className="mt-6 pt-6 border-t-2 border-dashed border-yellow-400/30">
+                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-yellow-400" />
+                      Figurka Boss
+                    </h4>
+                    {level.figures.filter(f => f.is_boss).map(bossFigure => {
+                      const figureProgress = getFigureProgress(bossFigure.id);
+                      const bossAccessible = canAccessBoss(level);
+                      const canPractice = isUnlocked && canAccessFigure(bossFigure) && bossAccessible;
+                      return (
+                        <Card key={bossFigure.id} className={cn("bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border-yellow-400/30 transition-all", canPractice ? "cursor-pointer hover:border-yellow-400/50" : "opacity-50 cursor-not-allowed")} onClick={() => canPractice && handleFigureClick(bossFigure, canPractice)}>
+                          <CardContent className="p-3 sm:p-4">
+                            <div className="flex items-start gap-3 sm:gap-4">
+                              {bossFigure.image_url && <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-black/30"><img src={bossFigure.image_url} alt={bossFigure.name} className={cn("w-full h-full object-cover", !bossAccessible && "grayscale")} /></div>}
+                              <div className="flex-1 min-w-0">
+                                <h5 className="text-base sm:text-lg font-bold text-yellow-400 mb-1 flex items-start gap-2 leading-tight">
+                                  <Crown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
+                                  <span className="break-words">{bossFigure.name}</span>
+                                </h5>
+                                {bossFigure.boss_description && <p className="text-xs sm:text-sm text-yellow-200 line-clamp-2">{bossFigure.boss_description}</p>}
+                              </div>
+                              <div className="flex-shrink-0">
+                                {figureProgress?.status === "completed" ? <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" /> : <Circle className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <LevelTrainingsSection levelId={level.id} sportCategory={sportCategory} isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)} />
+
+                {level.figures.some(f => f.type === "transitions") && isUnlocked && (
+                  <div className="mt-6 pt-6 border-t-2 border-dashed border-purple-400/30">
+                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                      <span className="text-purple-400">✨</span>
+                      Przejścia między figurami
+                      <Badge className="bg-purple-500/20 text-purple-400 border-purple-400/30 ml-2">Premium</Badge>
+                    </h4>
+                    {hasPremiumAccess || adminPreviewMode ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {level.figures.filter(f => f.type === "transitions").map(transition => {
+                          const figureProgress = getFigureProgress(transition.id);
+                          const canPractice = canAccessFigure(transition);
+                          return (
+                            <Card key={transition.id} className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-400/30 cursor-pointer hover:border-purple-400/50 transition-all" onClick={() => handleFigureClick(transition, canPractice)}>
+                              <CardContent className="p-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-blue-900/30">
+                                    {transition.transition_from_figure?.image_url && <img src={transition.transition_from_figure.image_url} alt="From" className="w-full h-full object-cover" />}
+                                  </div>
+                                  <div className="text-purple-400 text-xl flex-shrink-0">→</div>
+                                  <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-green-900/30">
+                                    {transition.transition_to_figure?.image_url && <img src={transition.transition_to_figure.image_url} alt="To" className="w-full h-full object-cover" />}
+                                  </div>
+                                  <div className="ml-auto flex-shrink-0">
+                                    {figureProgress?.status === "completed" ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Circle className="w-5 h-5 text-white/40" />}
+                                  </div>
+                                </div>
+                                <p className="text-white text-sm mt-2 font-medium">{transition.name}</p>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <Card className="bg-black/20 border-white/10">
+                        <CardContent className="p-6 text-center">
+                          <Lock className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+                          <h5 className="text-white font-semibold mb-2">Więcej figur dla użytkowników Premium</h5>
+                          <p className="text-white/60 text-sm mb-4">Odblokuj {level.figures.filter(f => f.type === "transitions").length} dodatkowych przejść między figurami</p>
+                          <Button onClick={() => navigate("/pricing")} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                            <Crown className="w-4 h-4 mr-2" />
+                            Przejdź na Premium
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {/* Separator and Premium Levels Section */}
+        {freeLevelsCount > 0 && sportLevels.some(l => l.level_number > freeLevelsCount) && (
+          <>
+            {/* Separator between free and paid levels */}
+            <div 
+              className={cn(
+                "relative py-6",
+                !hasFullAccess && !adminPreviewMode && "cursor-pointer group"
+              )}
+              onClick={() => !hasFullAccess && !adminPreviewMode && setIsPurchaseModalOpen(true)}
+            >
+              <div className="absolute inset-0 flex items-center">
+                <div className={cn(
+                  "w-full border-t-2 border-dashed transition-colors",
+                  hasFullAccess || adminPreviewMode 
+                    ? "border-green-500/50" 
+                    : "border-amber-500/50 group-hover:border-amber-400"
+                )} />
+              </div>
+              <div className="relative flex justify-center">
+                <div className="bg-black px-4 py-2 rounded-lg">
+                  {hasFullAccess || adminPreviewMode ? (
+                    <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30 px-4 py-1.5 text-sm font-medium">
+                      <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                      Pełny dostęp odblokowany
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
+                      <Lock className="w-3.5 h-3.5 mr-2" />
+                      Poziomy Premium — Kliknij aby wykupić ({formatPrice(sportCategoryInfo?.pricePln)})
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Levels - One overlay for all if locked */}
+            {!hasFullAccess && !adminPreviewMode ? (
+              <div className="relative">
+                {/* Single overlay for all premium levels */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black/90 z-10 rounded-xl flex flex-col items-center justify-center backdrop-blur-[2px] cursor-pointer"
+                  onClick={() => setIsPurchaseModalOpen(true)}
+                >
+                  <Lock className="w-14 h-14 text-amber-400 mb-4" />
+                  <h3 className="text-2xl font-bold text-amber-400 mb-2">
+                    {sportLevels.filter(l => l.level_number > freeLevelsCount).length} poziomów Premium
+                  </h3>
+                  <p className="text-white/70 text-center max-w-md mb-6 px-4">
+                    Wykup pełny dostęp do ścieżki {sportName}, aby odblokować wszystkie poziomy i figury
+                  </p>
+                  <Button 
+                    size="lg"
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold text-lg px-8"
+                  >
+                    Wykup dostęp - {formatPrice(sportCategoryInfo?.pricePln)}
+                  </Button>
+                </div>
+                
+                {/* Dimmed preview of premium levels */}
+                <div className="space-y-4 opacity-30 pointer-events-none">
+                  {sportLevels.filter(l => l.level_number > freeLevelsCount).map((level) => (
+                    <Card key={level.id} className="bg-amber-900/10 border-amber-500/20">
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0 bg-amber-600/30 text-amber-400">
+                            {level.level_number}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-base md:text-lg text-white/70">{level.level_name}</h3>
                               <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
                                 <Crown className="w-3 h-3 mr-1" />
                                 Premium
                               </Badge>
-                            )
-                          )}
-                        </div>
-                        {level.description && isUnlocked && <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                            {level.description}
-                          </p>}
-                        {isUnlocked && <p className="text-xs md:text-sm text-muted-foreground">
-                            {level.figures.length} figur
-                            {trainingsPerLevel[level.id] > 0 && `, ${trainingsPerLevel[level.id]} treningów`}
-                          </p>}
-                      </div>
-                    </div>
-
-                    {/* Status Indicator */}
-                    {isUnlocked ? <div className="flex items-center justify-end md:text-right ml-auto">
-                        {isCompleted ? <div className="flex items-center gap-2 text-green-400">
-                            <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
-                            <span className="text-xs md:text-sm font-medium">
-                              Ukończone
-                            </span>
-                          </div> : <div className="flex items-center gap-2 text-blue-400">
-                            <Circle className="w-4 h-4 md:w-5 md:h-5" />
-                            <span className="text-xs md:text-sm font-medium whitespace-nowrap">
-                              {progress}% ukończone
-                            </span>
-                          </div>}
-                      </div> : <div className="flex items-center gap-2 text-gray-500 ml-auto">
-                        <Lock className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-xs md:text-sm">{isPaidLevelLocked ? 'Wymaga zakupu' : 'Zablokowane'}</span>
-                      </div>}
-                  </div>
-
-                  {/* Progress Bar for Unlocked Levels */}
-                  {isUnlocked && !isCompleted && <div className="mb-4">
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-purple-400 to-blue-400 h-2 rounded-full transition-all duration-300" style={{
-                    width: `${progress}%`
-                  }} />
-                      </div>
-                    </div>}
-
-                  {/* Challenge Section */}
-                  {level.challenges && isUnlocked && <div className="mt-4 p-4 bg-purple-900/20 border border-purple-400/20 rounded-lg mb-4 ">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-purple-400 mb-1">
-                            Dostępne wyzwanie
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {level.challenges.title}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          {(() => {
-                      const challengeParticipation = userChallengeParticipations[level.challenge_id!];
-
-                      // 1. Wyzwanie ukończone - sprawdzamy completed lub status='completed'
-                      if (challengeParticipation?.completed === true || challengeParticipation?.status === "completed") {
-                        return <div className="flex items-center gap-2">
-                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                    <Trophy className="w-3 h-3 mr-1" />
-                                    Ukończone
-                                  </Badge>
-                                </div>;
-                      }
-
-                      // 2. Wyzwanie w trakcie - uczestniczy, NIE jest ukończone, i status='active'
-                      if (challengeParticipation?.participating && !challengeParticipation?.completed && challengeParticipation?.status === "active") {
-                        return <Button size="sm" variant="outline" onClick={() => navigate(`/challenges/${level.challenge_id}`)} className="border-purple-400/30 text-purple-400 hover:bg-purple-400/10">
-                                  Kontynuuj wyzwanie
-                                </Button>;
-                      }
-
-                      // 3. Nierozpoczęte - brak participacji lub status !== 'active'
-                      if (!challengeParticipation?.participating) {
-                        return <Button size="sm" onClick={() => joinChallenge(level.challenge_id!)} disabled={joiningChallenge === level.challenge_id} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
-                                  {joiningChallenge === level.challenge_id ? "Dołączanie..." : "Rozpocznij wyzwanie"}
-                                </Button>;
-                      }
-                      return null;
-                    })()}
-                        </div>
-                      </div>
-                    </div>}
-
-                  {/* Achievements Section for Level - NEW DESIGN */}
-                  {level.achievements && level.achievements.length > 0 && isUnlocked && <div className="mt-8 pt-6 border-t border-emerald-400/20">
-                        <h4 className="text-emerald-400 font-semibold mb-4 flex items-center gap-2 text-sm md:text-base">
-                          <span className="text-xl">🎖️</span>
-                          Odznaki za ukończenie poziomu
-                        </h4>
-                        <TooltipProvider>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-                            {level.achievements.map(achievement => {
-                      const isEarned = userAchievements?.includes(achievement.id);
-                      return <Tooltip key={achievement.id}>
-                                  <TooltipTrigger asChild>
-                                    <div className={cn("relative p-4 rounded-xl text-center transition-all cursor-pointer", "bg-gradient-to-br from-emerald-900/30 to-purple-900/30", "border border-emerald-400/30 hover:border-emerald-400/50", isEarned && "ring-2 ring-emerald-400/50 shadow-lg shadow-emerald-400/20")}>
-                                      {/* Large icon */}
-                                      <div className="text-4xl md:text-5xl mb-2">{achievement.icon}</div>
-
-                                      {/* Name */}
-                                      <p className="text-white font-medium text-sm md:text-base truncate">
-                                        {achievement.name}
-                                      </p>
-
-                                      {/* Points */}
-                                      <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
-                                        +{achievement.points} pkt
-                                      </div>
-
-                                      {/* Status badge */}
-                                      {isEarned && <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                                            <CheckCircle className="w-4 h-4 text-white" />
-                                          </div>}
-
-                                      {!isEarned && <div className="absolute inset-0 rounded-xl bg-black/50 flex items-center justify-center">
-                                            <p className="text-xs text-gray-300 px-2">Odblokuj ukończając poziom</p>
-                                          </div>}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-semibold">{achievement.name}</p>
-                                    <p className="text-xs text-muted-foreground">+{achievement.points} punktów</p>
-                                  </TooltipContent>
-                                </Tooltip>;
-                    })}
+                            </div>
+                            <p className="text-xs md:text-sm text-muted-foreground">{level.figures.length} figur</p>
                           </div>
-                        </TooltipProvider>
-                      </div>}
+                          <Lock className="w-5 h-5 text-amber-400/50" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Unlocked Premium Levels - Full render */
+              sportLevels.filter(l => l.level_number > freeLevelsCount).map((level, idx) => {
+                const realIndex = freeLevelsCount + idx;
+                const isUnlocked = isLevelUnlocked(level, realIndex);
+                const progress = getLevelProgress(level);
+                const isCompleted = progress === 100;
+                
+                return (
+                  <Card key={level.id} className={cn(
+                    "transition-all duration-300 relative",
+                    isUnlocked 
+                      ? "bg-white/5 border-white/10 hover:border-purple-400/50" 
+                      : "bg-gray-900/30 border-gray-600/20 opacity-60"
+                  )}>
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4">
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0 ${isCompleted ? "bg-gradient-to-r from-green-400 to-emerald-400 text-black" : isUnlocked ? "bg-gradient-to-r from-purple-400 to-blue-400 text-white" : "bg-gray-600 text-gray-400"}`}>
+                            {isCompleted ? <Crown className="w-5 h-5 md:w-6 md:h-6" /> : level.level_number}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
+                                {level.level_name}
+                              </h3>
+                              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                                <Crown className="w-3 h-3 mr-1" />
+                                Premium
+                              </Badge>
+                            </div>
+                            {level.description && isUnlocked && <p className="text-xs md:text-sm text-muted-foreground mt-1">{level.description}</p>}
+                            {isUnlocked && <p className="text-xs md:text-sm text-muted-foreground">
+                              {level.figures.length} figur
+                              {trainingsPerLevel[level.id] > 0 && `, ${trainingsPerLevel[level.id]} treningów`}
+                            </p>}
+                          </div>
+                        </div>
+                        {isUnlocked ? (
+                          <div className="flex items-center justify-end md:text-right ml-auto">
+                            {isCompleted ? (
+                              <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-xs md:text-sm font-medium">Ukończone</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 text-blue-400">
+                                <Circle className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-xs md:text-sm font-medium whitespace-nowrap">{progress}% ukończone</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-500 ml-auto">
+                            <Lock className="w-4 h-4 md:w-5 md:h-5" />
+                            <span className="text-xs md:text-sm">Zablokowane</span>
+                          </div>
+                        )}
+                      </div>
 
-                  {/* Regular Figures - Grouped by Sublevel */}
-                  {isUnlocked && <>
-                      {/* Group figures by sublevel */}
-                      {Object.entries(level.figures.filter(f => !f.is_boss && f.type !== "transitions").reduce((acc, fig) => {
-                  const sublevelKey = fig.sublevel || 1;
-                  if (!acc[sublevelKey]) acc[sublevelKey] = [];
-                  acc[sublevelKey].push(fig);
-                  return acc;
-                }, {} as {
-                  [key: number]: Figure[];
-                })).sort(([a], [b]) => Number(a) - Number(b)).map(([sublevelStr, figures], idx) => {
-                  const sublevelNum = Number(sublevelStr);
-                  const canAccess = canAccessSublevel(level, sublevelNum);
-                  const firstFigure = figures[0];
-                  return <div key={sublevelStr}>
-                              {/* Separator between sublevels (not before first) */}
-                              {idx > 0 && <div className="my-4 border-t-2 border-dashed border-purple-400/30" />}
+                      {isUnlocked && !isCompleted && (
+                        <div className="mb-4">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div className="bg-gradient-to-r from-purple-400 to-blue-400 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                          </div>
+                        </div>
+                      )}
 
-                              {/* Sublevel Header */}
-                              {sublevelNum > 1 && <div className="mb-3">
-                                  {firstFigure?.sublevel_description && canAccess && <p className="text-sm text-muted-foreground mt-1 ml-1">
-                                        {firstFigure.sublevel_description}
-                                      </p>}
-                                </div>}
+                      {level.challenges && isUnlocked && (
+                        <div className="mt-4 p-4 bg-purple-900/20 border border-purple-400/20 rounded-lg mb-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-purple-400 mb-1">Dostępne wyzwanie</h4>
+                              <p className="text-sm text-muted-foreground">{level.challenges.title}</p>
+                            </div>
+                            <div className="text-right">
+                              {(() => {
+                                const challengeParticipation = userChallengeParticipations[level.challenge_id!];
+                                if (challengeParticipation?.completed === true || challengeParticipation?.status === "completed") {
+                                  return (
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                        <Trophy className="w-3 h-3 mr-1" />
+                                        Ukończone
+                                      </Badge>
+                                    </div>
+                                  );
+                                }
+                                if (challengeParticipation?.participating && !challengeParticipation?.completed && challengeParticipation?.status === "active") {
+                                  return (
+                                    <Button size="sm" variant="outline" onClick={() => navigate(`/challenges/${level.challenge_id}`)} className="border-purple-400/30 text-purple-400 hover:bg-purple-400/10">
+                                      Kontynuuj wyzwanie
+                                    </Button>
+                                  );
+                                }
+                                if (!challengeParticipation?.participating) {
+                                  return (
+                                    <Button size="sm" onClick={() => joinChallenge(level.challenge_id!)} disabled={joiningChallenge === level.challenge_id} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                                      {joiningChallenge === level.challenge_id ? "Dołączanie..." : "Rozpocznij wyzwanie"}
+                                    </Button>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
-                              {/* Grid with figures */}
-                              <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 ${!canAccess ? "opacity-50 pointer-events-none" : ""}`}>
-                                {figures.map(figure => {
-                        const figureProgress = getFigureProgress(figure.id);
-                        const canPractice = isUnlocked && canAccessFigure(figure) && canAccess;
-                        return <div key={figure.id} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${canPractice ? "hover:scale-105" : "opacity-60"}`} onClick={() => handleFigureClick(figure, canPractice)}>
-                                      {figure.image_url ? <img src={figure.image_url} alt={figure.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-white/5 flex items-center justify-center">
-                                          <span className="text-2xl">🤸</span>
-                                        </div>}
-
-                                      {/* Status Overlay */}
-                                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                        {figureProgress?.status === "completed" ? <CheckCircle className="w-8 h-8 text-green-400" /> : figureProgress?.status === "for_later" ? <Bookmark className="w-6 h-6 text-blue-400" /> : figureProgress?.status === "failed" ? <AlertCircle className="w-6 h-6 text-red-400" /> : canPractice ? <Circle className="w-6 h-6 text-white/60" /> : <Lock className="w-6 h-6 text-gray-400" />}
+                      {level.achievements && level.achievements.length > 0 && isUnlocked && (
+                        <div className="mt-8 pt-6 border-t border-emerald-400/20">
+                          <h4 className="text-emerald-400 font-semibold mb-4 flex items-center gap-2 text-sm md:text-base">
+                            <span className="text-xl">🎖️</span>
+                            Odznaki za ukończenie poziomu
+                          </h4>
+                          <TooltipProvider>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+                              {level.achievements.map(achievement => {
+                                const isEarned = userAchievements?.includes(achievement.id);
+                                return (
+                                  <Tooltip key={achievement.id}>
+                                    <TooltipTrigger asChild>
+                                      <div className={cn("relative p-4 rounded-xl text-center transition-all cursor-pointer", "bg-gradient-to-br from-emerald-900/30 to-purple-900/30", "border border-emerald-400/30 hover:border-emerald-400/50", isEarned && "ring-2 ring-emerald-400/50 shadow-lg shadow-emerald-400/20")}>
+                                        <div className="text-4xl md:text-5xl mb-2">{achievement.icon}</div>
+                                        <p className="text-white font-medium text-sm md:text-base truncate">{achievement.name}</p>
+                                        <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">+{achievement.points} pkt</div>
+                                        {isEarned && <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center"><CheckCircle className="w-4 h-4 text-white" /></div>}
+                                        {!isEarned && <div className="absolute inset-0 rounded-xl bg-black/50 flex items-center justify-center"><p className="text-xs text-gray-300 px-2">Odblokuj ukończając poziom</p></div>}
                                       </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="font-semibold">{achievement.name}</p>
+                                      <p className="text-xs text-muted-foreground">+{achievement.points} punktów</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })}
+                            </div>
+                          </TooltipProvider>
+                        </div>
+                      )}
 
-                                      {/* Figure Name and Hold Time */}
-                                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2">
-                                        <p className="text-white text-xs font-medium truncate">
-                                          {figure.name}
-                                        </p>
-                                        <div className="flex items-center gap-1 mt-1 flex-wrap">
-                                          {(figure.level_hold_time_seconds || figure.hold_time_seconds) && <div className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                                              {figure.level_hold_time_seconds || figure.hold_time_seconds}
-                                              s
-                                            </div>}
-                                          {figure.level_reps && <div className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                                              {figure.level_reps}x
-                                            </div>}
+                      {isUnlocked && (
+                        <>
+                          {Object.entries(level.figures.filter(f => !f.is_boss && f.type !== "transitions").reduce((acc, fig) => {
+                            const sublevelKey = fig.sublevel || 1;
+                            if (!acc[sublevelKey]) acc[sublevelKey] = [];
+                            acc[sublevelKey].push(fig);
+                            return acc;
+                          }, {} as { [key: number]: Figure[] })).sort(([a], [b]) => Number(a) - Number(b)).map(([sublevelStr, figures], idx) => {
+                            const sublevelNum = Number(sublevelStr);
+                            const canAccess = canAccessSublevel(level, sublevelNum);
+                            const firstFigure = figures[0];
+                            return (
+                              <div key={sublevelStr}>
+                                {idx > 0 && <div className="my-4 border-t-2 border-dashed border-purple-400/30" />}
+                                {sublevelNum > 1 && (
+                                  <div className="mb-3">
+                                    {firstFigure?.sublevel_description && canAccess && <p className="text-sm text-muted-foreground mt-1 ml-1">{firstFigure.sublevel_description}</p>}
+                                  </div>
+                                )}
+                                <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 ${!canAccess ? "opacity-50 pointer-events-none" : ""}`}>
+                                  {figures.map(figure => {
+                                    const figureProgress = getFigureProgress(figure.id);
+                                    const canPractice = isUnlocked && canAccessFigure(figure) && canAccess;
+                                    return (
+                                      <div key={figure.id} className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${canPractice ? "hover:scale-105" : "opacity-60"}`} onClick={() => handleFigureClick(figure, canPractice)}>
+                                        {figure.image_url ? <img src={figure.image_url} alt={figure.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="text-2xl">🤸</span></div>}
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                          {figureProgress?.status === "completed" ? <CheckCircle className="w-8 h-8 text-green-400" /> : figureProgress?.status === "for_later" ? <Bookmark className="w-6 h-6 text-blue-400" /> : figureProgress?.status === "failed" ? <AlertCircle className="w-6 h-6 text-red-400" /> : canPractice ? <Circle className="w-6 h-6 text-white/60" /> : <Lock className="w-6 h-6 text-gray-400" />}
+                                        </div>
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2">
+                                          <p className="text-white text-xs font-medium truncate">{figure.name}</p>
+                                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                            {(figure.level_hold_time_seconds || figure.hold_time_seconds) && <div className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{figure.level_hold_time_seconds || figure.hold_time_seconds}s</div>}
+                                            {figure.level_reps && <div className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{figure.level_reps}x</div>}
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>;
-                      })}
-                              </div>
-                            </div>;
-                })}
-                    </>}
-
-                  {/* Boss Figures - Below regular figures */}
-                  {isUnlocked && level.figures.some(f => f.is_boss) && <div className="mt-6 pt-6 border-t-2 border-dashed border-yellow-400/30">
-                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        <Crown className="w-5 h-5 text-yellow-400" />
-                        Figurka Boss
-                      </h4>
-                      {level.figures.filter(f => f.is_boss).map(bossFigure => {
-                  const figureProgress = getFigureProgress(bossFigure.id);
-                  const bossAccessible = canAccessBoss(level);
-                  const canPractice = isUnlocked && canAccessFigure(bossFigure) && bossAccessible;
-                  return <Card key={bossFigure.id} className={cn("bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border-yellow-400/30 transition-all", canPractice ? "cursor-pointer hover:border-yellow-400/50" : "opacity-50 cursor-not-allowed")} onClick={() => canPractice && handleFigureClick(bossFigure, canPractice)}>
-                              <CardContent className="p-3 sm:p-4">
-                                <div className="flex items-start gap-3 sm:gap-4">
-                                  {bossFigure.image_url && <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-black/30">
-                                      <img src={bossFigure.image_url} alt={bossFigure.name} className={cn("w-full h-full object-cover", !bossAccessible && "grayscale")} />
-                                    </div>}
-                                  <div className="flex-1 min-w-0">
-                                    <h5 className="text-base sm:text-lg font-bold text-yellow-400 mb-1 flex items-start gap-2 leading-tight">
-                                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
-                                      <span className="break-words">
-                                        {bossFigure.name}
-                                      </span>
-                                    </h5>
-                                    {bossFigure.boss_description && <p className="text-xs sm:text-sm text-yellow-200 line-clamp-2">
-                                        {bossFigure.boss_description}
-                                      </p>}
-                                  </div>
-                                  <div className="flex-shrink-0">
-                                    {figureProgress?.status === "completed" ? <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" /> : <Circle className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />}
-                                  </div>
+                                    );
+                                  })}
                                 </div>
-                              </CardContent>
-                            </Card>;
-                })}
-                    </div>}
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
 
-                  {/* Level Trainings Section */}
-                  <LevelTrainingsSection 
-                    levelId={level.id}
-                    sportCategory={sportCategory}
-                    isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)}
-                  />
+                      {isUnlocked && level.figures.some(f => f.is_boss) && (
+                        <div className="mt-6 pt-6 border-t-2 border-dashed border-yellow-400/30">
+                          <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <Crown className="w-5 h-5 text-yellow-400" />
+                            Figurka Boss
+                          </h4>
+                          {level.figures.filter(f => f.is_boss).map(bossFigure => {
+                            const figureProgress = getFigureProgress(bossFigure.id);
+                            const bossAccessible = canAccessBoss(level);
+                            const canPractice = isUnlocked && canAccessFigure(bossFigure) && bossAccessible;
+                            return (
+                              <Card key={bossFigure.id} className={cn("bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border-yellow-400/30 transition-all", canPractice ? "cursor-pointer hover:border-yellow-400/50" : "opacity-50 cursor-not-allowed")} onClick={() => canPractice && handleFigureClick(bossFigure, canPractice)}>
+                                <CardContent className="p-3 sm:p-4">
+                                  <div className="flex items-start gap-3 sm:gap-4">
+                                    {bossFigure.image_url && <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-black/30"><img src={bossFigure.image_url} alt={bossFigure.name} className={cn("w-full h-full object-cover", !bossAccessible && "grayscale")} /></div>}
+                                    <div className="flex-1 min-w-0">
+                                      <h5 className="text-base sm:text-lg font-bold text-yellow-400 mb-1 flex items-start gap-2 leading-tight">
+                                        <Crown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
+                                        <span className="break-words">{bossFigure.name}</span>
+                                      </h5>
+                                      {bossFigure.boss_description && <p className="text-xs sm:text-sm text-yellow-200 line-clamp-2">{bossFigure.boss_description}</p>}
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      {figureProgress?.status === "completed" ? <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" /> : <Circle className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      )}
 
-                  {/* Transitions Section - After boss */}
-                  {level.figures.some(f => f.type === "transitions") && isUnlocked && <div className="mt-6 pt-6 border-t-2 border-dashed border-purple-400/30">
-                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                          <span className="text-purple-400">✨</span>
-                          Przejścia między figurami
-                          <Badge className="bg-purple-500/20 text-purple-400 border-purple-400/30 ml-2">
-                            Premium
-                          </Badge>
-                        </h4>
+                      <LevelTrainingsSection levelId={level.id} sportCategory={sportCategory} isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)} />
 
-                        {hasPremiumAccess || adminPreviewMode ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {level.figures.filter(f => f.type === "transitions").map(transition => {
-                    const figureProgress = getFigureProgress(transition.id);
-                    const canPractice = canAccessFigure(transition);
-                    return <Card key={transition.id} className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-400/30 cursor-pointer hover:border-purple-400/50 transition-all" onClick={() => handleFigureClick(transition, canPractice)}>
+                      {level.figures.some(f => f.type === "transitions") && isUnlocked && (
+                        <div className="mt-6 pt-6 border-t-2 border-dashed border-purple-400/30">
+                          <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <span className="text-purple-400">✨</span>
+                            Przejścia między figurami
+                            <Badge className="bg-purple-500/20 text-purple-400 border-purple-400/30 ml-2">Premium</Badge>
+                          </h4>
+                          {hasPremiumAccess || adminPreviewMode ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {level.figures.filter(f => f.type === "transitions").map(transition => {
+                                const figureProgress = getFigureProgress(transition.id);
+                                const canPractice = canAccessFigure(transition);
+                                return (
+                                  <Card key={transition.id} className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-400/30 cursor-pointer hover:border-purple-400/50 transition-all" onClick={() => handleFigureClick(transition, canPractice)}>
                                     <CardContent className="p-3">
                                       <div className="flex items-center gap-3">
-                                        {/* From Figure Thumbnail */}
                                         <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-blue-900/30">
                                           {transition.transition_from_figure?.image_url && <img src={transition.transition_from_figure.image_url} alt="From" className="w-full h-full object-cover" />}
                                         </div>
-
-                                        {/* Arrow */}
-                                        <div className="text-purple-400 text-xl flex-shrink-0">
-                                          →
-                                        </div>
-
-                                        {/* To Figure Thumbnail */}
+                                        <div className="text-purple-400 text-xl flex-shrink-0">→</div>
                                         <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-green-900/30">
                                           {transition.transition_to_figure?.image_url && <img src={transition.transition_to_figure.image_url} alt="To" className="w-full h-full object-cover" />}
                                         </div>
-
-                                        {/* Progress Indicator */}
                                         <div className="ml-auto flex-shrink-0">
                                           {figureProgress?.status === "completed" ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Circle className="w-5 h-5 text-white/40" />}
                                         </div>
                                       </div>
-
-                                      <p className="text-white text-sm mt-2 font-medium">
-                                        {transition.name}
-                                      </p>
+                                      <p className="text-white text-sm mt-2 font-medium">{transition.name}</p>
                                     </CardContent>
-                                  </Card>;
-                  })}
-                          </div> : <Card className="bg-black/20 border-white/10">
-                            <CardContent className="p-6 text-center">
-                              <Lock className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-                              <h5 className="text-white font-semibold mb-2">
-                                Więcej figur dla użytkowników Premium
-                              </h5>
-                              <p className="text-white/60 text-sm mb-4">
-                                Odblokuj{" "}
-                                {level.figures.filter(f => f.type === "transitions").length}{" "}
-                                dodatkowych przejść między figurami
-                              </p>
-                              <Button onClick={() => navigate("/pricing")} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
-                                <Crown className="w-4 h-4 mr-2" />
-                                Przejdź na Premium
-                              </Button>
-                            </CardContent>
-                          </Card>}
-                      </div>}
-                </CardContent>
-              </Card>
-            </>
-          );
-        })}
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <Card className="bg-black/20 border-white/10">
+                              <CardContent className="p-6 text-center">
+                                <Lock className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+                                <h5 className="text-white font-semibold mb-2">Więcej figur dla użytkowników Premium</h5>
+                                <p className="text-white/60 text-sm mb-4">Odblokuj {level.figures.filter(f => f.type === "transitions").length} dodatkowych przejść między figurami</p>
+                                <Button onClick={() => navigate("/pricing")} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                                  <Crown className="w-4 h-4 mr-2" />
+                                  Przejdź na Premium
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </>
+        )}
         </div>
 
         {/* Figure Preview Modal */}
