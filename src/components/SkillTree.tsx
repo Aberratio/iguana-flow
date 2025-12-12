@@ -684,8 +684,8 @@ const SkillTree = ({
       // Skipping legacy calendar generation (handled client-side)
 
       toast({
-        title: "Challenge joined!",
-        description: "You've successfully joined the challenge. Good luck!"
+        title: "Sukces!",
+        description: "Dołączyłeś do wyzwania. Powodzenia!"
       });
 
       // Update local state
@@ -707,8 +707,8 @@ const SkillTree = ({
     } catch (error) {
       console.error("Error joining challenge:", error);
       toast({
-        title: "Error",
-        description: "Failed to join challenge. Please try again.",
+        title: "Błąd",
+        description: "Nie udało się dołączyć do wyzwania. Spróbuj ponownie.",
         variant: "destructive"
       });
     } finally {
