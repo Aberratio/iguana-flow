@@ -593,9 +593,238 @@ expect(fn).toHaveBeenCalledTimes(n);
 
 ---
 
+---
+
+## End-to-End Testing with Playwright
+
+### Overview
+
+E2E tests simulate real user interactions across the full application stack. They run in real browsers and test complete user flows.
+
+### Running E2E Tests
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run with interactive UI mode
+npm run test:e2e:ui
+
+# Run in headed mode (visible browser)
+npm run test:e2e:headed
+
+# Run with debugging
+npm run test:e2e:debug
+
+# Run specific test file
+npx playwright test e2e/tests/auth.spec.ts
+
+# Run tests in specific browser
+npx playwright test --project=chromium
+
+# Run tests matching pattern
+npx playwright test -g "login"
+```
+
+### E2E Test Structure
+
+```
+e2e/
+├── fixtures/
+│   ├── auth.fixture.ts       # Authentication fixture
+│   └── test-data.ts          # Test data constants
+├── pages/
+│   ├── landing.page.ts       # Landing Page Object
+│   └── auth.page.ts          # Auth Modal Page Object
+└── tests/
+    ├── landing.spec.ts       # Landing page tests
+    ├── auth.spec.ts          # Authentication tests
+    ├── navigation.spec.ts    # Navigation tests
+    ├── responsive.spec.ts    # Responsive design tests
+    └── accessibility.spec.ts # Accessibility tests
+```
+
+### Writing New E2E Tests
+
+#### 1. Create a Page Object
+
+Page Objects encapsulate page-specific selectors and actions:
+
+```typescript
+// e2e/pages/my.page.ts
+import { Page, Locator, expect } from '@playwright/test';
+
+export class MyPage {
+  readonly page: Page;
+  readonly heading: Locator;
+  readonly submitButton: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.heading = page.getByRole('heading', { level: 1 });
+    this.submitButton = page.getByRole('button', { name: 'Submit' });
+  }
+
+  async goto() {
+    await this.page.goto('/my-page');
+  }
+
+  async submit() {
+    await this.submitButton.click();
+  }
+
+  async expectHeadingVisible() {
+    await expect(this.heading).toBeVisible();
+  }
+}
+```
+
+#### 2. Write Test Specification
+
+```typescript
+// e2e/tests/my.spec.ts
+import { test, expect } from '@playwright/test';
+import { MyPage } from '../pages/my.page';
+
+test.describe('My Feature', () => {
+  let myPage: MyPage;
+
+  test.beforeEach(async ({ page }) => {
+    myPage = new MyPage(page);
+    await myPage.goto();
+  });
+
+  test('should display heading', async () => {
+    await myPage.expectHeadingVisible();
+  });
+
+  test('should submit form', async ({ page }) => {
+    await myPage.submit();
+    await expect(page.locator('text=Success')).toBeVisible();
+  });
+});
+```
+
+### Playwright Best Practices
+
+#### Selector Priority (most to least preferred)
+
+```typescript
+// ✅ Role-based (most reliable, accessible)
+page.getByRole('button', { name: 'Submit' });
+page.getByRole('heading', { level: 1 });
+
+// ✅ Label/text-based
+page.getByLabel('Email');
+page.getByPlaceholder('Enter email');
+page.getByText('Welcome');
+
+// ⚠️ Test ID (when semantic selectors don't work)
+page.getByTestId('submit-button');
+
+// ❌ CSS selectors (fragile, avoid)
+page.locator('.btn-primary');
+page.locator('#submit');
+```
+
+#### Waiting Strategies
+
+```typescript
+// Auto-waiting (preferred)
+await page.getByRole('button').click(); // Waits automatically
+
+// Explicit wait for element
+await expect(page.getByText('Loaded')).toBeVisible();
+
+// Wait for navigation
+await page.waitForURL('/dashboard');
+
+// Wait for network idle
+await page.waitForLoadState('networkidle');
+```
+
+#### Handling Modals and Dialogs
+
+```typescript
+// Wait for modal to appear
+const modal = page.locator('[role="dialog"]');
+await expect(modal).toBeVisible();
+
+// Interact within modal
+await modal.getByRole('button', { name: 'Confirm' }).click();
+
+// Close with Escape
+await page.keyboard.press('Escape');
+```
+
+### Browser Configuration
+
+Tests run on multiple browsers/devices:
+
+| Project | Device |
+|---------|--------|
+| chromium | Desktop Chrome |
+| firefox | Desktop Firefox |
+| webkit | Desktop Safari |
+| mobile-chrome | Pixel 5 |
+| mobile-safari | iPhone 12 |
+
+Run specific browser:
+```bash
+npx playwright test --project=chromium
+npx playwright test --project=mobile-safari
+```
+
+### Debugging E2E Tests
+
+```bash
+# Interactive UI mode
+npm run test:e2e:ui
+
+# Step-by-step debugging
+npm run test:e2e:debug
+
+# Generate trace on failure (auto-configured)
+# View trace: npx playwright show-trace trace.zip
+```
+
+### Common Patterns
+
+#### Testing Responsive Design
+
+```typescript
+test.describe('Mobile', () => {
+  test.use({ ...devices['iPhone 12'] });
+  
+  test('should show mobile menu', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Menu' })).toBeVisible();
+  });
+});
+```
+
+#### Testing Form Validation
+
+```typescript
+test('should show validation errors', async ({ page }) => {
+  await page.getByRole('button', { name: 'Submit' }).click();
+  await expect(page.getByText('Email is required')).toBeVisible();
+});
+```
+
+#### Screenshots and Videos
+
+Failed tests automatically capture screenshots and videos. Find them in:
+- `playwright-report/` - HTML report
+- `test-results/` - Screenshots and videos
+
+---
+
 ## Resources
 
 - [Vitest Documentation](https://vitest.dev/)
 - [React Testing Library Docs](https://testing-library.com/docs/react-testing-library/intro/)
 - [MSW Documentation](https://mswjs.io/docs/)
 - [Testing Library Cheatsheet](https://testing-library.com/docs/react-testing-library/cheatsheet/)
+- [Playwright Documentation](https://playwright.dev/docs/intro)
+- [Playwright Best Practices](https://playwright.dev/docs/best-practices)
