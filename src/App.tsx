@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UpdateChecker } from "@/components/UpdateChecker";
+import { OfflineNotification } from "@/components/OfflineNotification";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import AppLayout from "@/components/Layout/AppLayout";
@@ -53,7 +54,16 @@ import TrainingLibrarySession from "@/pages/TrainingLibrarySession";
 
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000,
+      networkMode: 'offlineFirst',
+    },
+  },
+});
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -445,6 +455,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <UpdateChecker />
+        <OfflineNotification />
         <Toaster />
         <Sonner />
         <BrowserRouter>
