@@ -13,6 +13,7 @@ const AerialJourneyRoutes = () => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   const [sportCategories, setSportCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchSportCategories();
@@ -20,6 +21,7 @@ const AerialJourneyRoutes = () => {
 
   const fetchSportCategories = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from("sport_categories")
         .select("*")
@@ -29,8 +31,19 @@ const AerialJourneyRoutes = () => {
       setSportCategories(data || []);
     } catch (error) {
       console.error("Error fetching sport categories:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Show loading spinner while fetching categories
+  if (loading && (mode === "preview" || mode === "admin" || mode === "sport")) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/80 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Prevent non-admins from accessing preview mode
   if (mode === "preview" && !isAdmin) {
@@ -45,24 +58,19 @@ const AerialJourneyRoutes = () => {
   // Admin preview routes - unlocked levels but no edit
   if (mode === "preview" && category && isAdmin) {
     const sportData = sportCategories.find(s => s.key_name === category);
-    if (sportData) {
-      return (
-        <SkillTree
-          sportCategory={category}
-          sportName={sportData.name}
-          onBack={() => navigate("/aerial-journey")}
-          adminPreviewMode={true}
-        />
-      );
-    }
+    return (
+      <SkillTree
+        sportCategory={category}
+        sportName={sportData?.name || category}
+        onBack={() => navigate("/aerial-journey")}
+        adminPreviewMode={true}
+      />
+    );
   }
 
   // Admin edit routes - per sport management
   if (mode === "admin" && category && isAdmin) {
-    const sportData = sportCategories.find(s => s.key_name === category);
-    if (sportData) {
-      return <SportAdminPanel sportKey={category} />;
-    }
+    return <SportAdminPanel sportKey={category} />;
   }
 
   // User sport category routes
