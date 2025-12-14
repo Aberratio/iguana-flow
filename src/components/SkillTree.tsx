@@ -1093,42 +1093,43 @@ const SkillTree = ({
             </Card>
           );
         })}
-
         {/* Separator and Premium Levels Section */}
-        {freeLevelsCount > 0 && sportLevels.some(l => l.level_number > freeLevelsCount) && (
+        {sportLevels.some(l => l.level_number > freeLevelsCount) && (
           <>
-            {/* Separator between free and paid levels */}
-            <div 
-              className={cn(
-                "relative py-6",
-                !hasFullAccess && !adminPreviewMode && "cursor-pointer group"
-              )}
-              onClick={() => !hasFullAccess && !adminPreviewMode && setIsPurchaseModalOpen(true)}
-            >
-              <div className="absolute inset-0 flex items-center">
-                <div className={cn(
-                  "w-full border-t-2 border-dashed transition-colors",
-                  hasFullAccess || adminPreviewMode 
-                    ? "border-green-500/50" 
-                    : "border-amber-500/50 group-hover:border-amber-400"
-                )} />
-              </div>
-              <div className="relative flex justify-center">
-                <div className="bg-black px-4 py-2 rounded-lg">
-                  {hasFullAccess || adminPreviewMode ? (
-                    <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30 px-4 py-1.5 text-sm font-medium">
-                      <CheckCircle className="w-3.5 h-3.5 mr-2" />
-                      Pełny dostęp odblokowany
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
-                      <Lock className="w-3.5 h-3.5 mr-2" />
-                      Poziomy Premium — Kliknij aby wykupić ({formatPrice(sportCategoryInfo?.pricePln)})
-                    </Badge>
-                  )}
+            {/* Separator between free and paid levels - only show if there are free levels */}
+            {freeLevelsCount > 0 && (
+              <div 
+                className={cn(
+                  "relative py-6",
+                  !hasFullAccess && !adminPreviewMode && "cursor-pointer group"
+                )}
+                onClick={() => !hasFullAccess && !adminPreviewMode && setIsPurchaseModalOpen(true)}
+              >
+                <div className="absolute inset-0 flex items-center">
+                  <div className={cn(
+                    "w-full border-t-2 border-dashed transition-colors",
+                    hasFullAccess || adminPreviewMode 
+                      ? "border-green-500/50" 
+                      : "border-amber-500/50 group-hover:border-amber-400"
+                  )} />
+                </div>
+                <div className="relative flex justify-center">
+                  <div className="bg-black px-4 py-2 rounded-lg">
+                    {hasFullAccess || adminPreviewMode ? (
+                      <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30 px-4 py-1.5 text-sm font-medium">
+                        <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                        Pełny dostęp odblokowany
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30 px-4 py-1.5 text-sm font-medium group-hover:scale-105 transition-transform">
+                        <Lock className="w-3.5 h-3.5 mr-2" />
+                        Poziomy Premium — Kliknij aby wykupić ({formatPrice(sportCategoryInfo?.pricePln)})
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Premium Levels - One overlay for all if locked */}
             {!hasFullAccess && !adminPreviewMode ? (
