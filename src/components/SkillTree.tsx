@@ -1039,7 +1039,7 @@ const SkillTree = ({
                   </div>
                 )}
 
-                <LevelTrainingsSection levelId={level.id} sportCategory={sportCategory} isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)} />
+<LevelTrainingsSection levelId={level.id} sportCategory={sportCategory} isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)} levelNumber={level.level_number} />
 
                 {level.figures.some(f => f.type === "transitions") && isUnlocked && (
                   <div className="mt-6 pt-6 border-t-2 border-dashed border-purple-400/30">
@@ -1412,7 +1412,7 @@ const SkillTree = ({
                         </div>
                       )}
 
-                      <LevelTrainingsSection levelId={level.id} sportCategory={sportCategory} isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)} />
+                      <LevelTrainingsSection levelId={level.id} sportCategory={sportCategory} isLevelUnlocked={isUnlocked || (hasDemoAccess && demoMode)} levelNumber={level.level_number} />
 
                       {level.figures.some(f => f.type === "transitions") && isUnlocked && (
                         <div className="mt-6 pt-6 border-t-2 border-dashed border-purple-400/30">
