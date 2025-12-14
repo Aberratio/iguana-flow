@@ -1152,7 +1152,7 @@ const ChallengeDayTimer = () => {
           >
             <CardContent className="p-4 sm:p-6 md:p-8">
               {getCurrentSegment()?.type === "exercise" ? (
-                <div className="relative w-full h-[250px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden ring-1 ring-white/10 mb-6">
+              <div className="relative w-full h-[250px] sm:h-[300px] md:h-[500px] md:max-w-sm md:mx-auto lg:max-w-md rounded-2xl overflow-hidden ring-1 ring-white/10 mb-6">
                   <>
                     {getCurrentSegment()?.shouldPlayVideo &&
                     getCurrentSegment()?.videoUrl ? (
@@ -1257,7 +1257,7 @@ const ChallengeDayTimer = () => {
               </h3>
 
               {/* Large video or image preview */}
-              <div className="relative w-full h-[250px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden ring-1 ring-white/10 mb-6">
+              <div className="relative w-full h-[250px] sm:h-[300px] md:h-[500px] md:max-w-sm md:mx-auto lg:max-w-md rounded-2xl overflow-hidden ring-1 ring-white/10 mb-6">
                 {getNextExercise().shouldPlayVideo &&
                 getNextExercise().videoUrl ? (
                   <video

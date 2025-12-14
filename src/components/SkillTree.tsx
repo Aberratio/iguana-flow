@@ -59,6 +59,7 @@ interface SportLevel {
   level_name: string;
   point_limit: number;
   description?: string;
+  status?: string;
   figures: Figure[];
   challenge_id?: string;
   challenges?: Challenge;
@@ -250,10 +251,8 @@ const SkillTree = ({
     if (!user) return;
     try {
       // Fetch sport levels with their figures, challenges, and achievements
-      const {
-        data: levelsData,
-        error: levelsError
-      } = await supabase.from("sport_levels").select(`
+      // In admin preview mode, show all levels including unpublished ones
+      let query = supabase.from("sport_levels").select(`
           id,
           sport_category,
           level_number,
@@ -261,6 +260,7 @@ const SkillTree = ({
           point_limit,
           description,
           challenge_id,
+          status,
           challenges (
             id,
             title,
@@ -298,9 +298,16 @@ const SkillTree = ({
               transition_to_figure:transition_to_figure_id(id, name, image_url)
             )
           )
-        `).eq("sport_category", sportCategory).eq("status", "published").order("level_number", {
+        `).eq("sport_category", sportCategory).order("level_number", {
         ascending: true
       });
+
+      // Only filter by published status if not in admin preview mode
+      if (!adminPreviewMode) {
+        query = query.eq("status", "published");
+      }
+
+      const { data: levelsData, error: levelsError } = await query;
       if (levelsError) throw levelsError;
 
       // Fetch achievements for levels
@@ -350,6 +357,7 @@ const SkillTree = ({
         level_name: level.level_name,
         point_limit: level.point_limit,
         description: level.description,
+        status: level.status,
         challenge_id: level.challenge_id,
         challenges: level.challenges,
         achievements: achievementsByLevel[level.id] || [],
@@ -397,11 +405,16 @@ const SkillTree = ({
       const currentParticipations = participations || userChallengeParticipations;
 
       // Get all sport levels for this category, ordered by level number
-      const {
-        data: levelsData
-      } = await supabase.from("sport_levels").select("id, level_number, point_limit, challenge_id").eq("sport_category", sportCategory).eq("status", "published").order("level_number", {
+      let levelsQuery = supabase.from("sport_levels").select("id, level_number, point_limit, challenge_id").eq("sport_category", sportCategory).order("level_number", {
         ascending: true
       });
+      
+      // Only filter by published status if not in admin preview mode
+      if (!adminPreviewMode) {
+        levelsQuery = levelsQuery.eq("status", "published");
+      }
+      
+      const { data: levelsData } = await levelsQuery;
       if (!levelsData) {
         setUserPoints(0);
         return;
@@ -823,6 +836,12 @@ const SkillTree = ({
                         <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
                           {level.level_name}
                         </h3>
+                        {adminPreviewMode && level.status !== "published" && (
+                          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Wersja robocza
+                          </Badge>
+                        )}
                         {freeLevelsCount > 0 && (
                           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                             <CheckCircle className="w-3 h-3 mr-1" />
@@ -1146,6 +1165,12 @@ const SkillTree = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-base md:text-lg text-white/70">{level.level_name}</h3>
+                              {adminPreviewMode && level.status !== "published" && (
+                                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  Wersja robocza
+                                </Badge>
+                              )}
                               <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
                                 <Crown className="w-3 h-3 mr-1" />
                                 Premium
@@ -1186,6 +1211,12 @@ const SkillTree = ({
                               <h3 className={`font-semibold text-base md:text-lg ${isUnlocked ? "text-white" : "text-gray-500"}`}>
                                 {level.level_name}
                               </h3>
+                              {adminPreviewMode && level.status !== "published" && (
+                                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  Wersja robocza
+                                </Badge>
+                              )}
                               <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
                                 <Crown className="w-3 h-3 mr-1" />
                                 Premium

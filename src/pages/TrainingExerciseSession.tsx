@@ -66,6 +66,7 @@ interface TimerSegment {
   exerciseNotes?: string;
   exerciseImage?: string;
   videoUrl?: string;
+  videoPosition?: string;
   reps?: number;
   sets?: number;
 }
@@ -296,6 +297,7 @@ const TrainingExerciseSession = () => {
                 exerciseNotes: exercise.notes,
                 exerciseImage: media?.image_url,
                 videoUrl: media?.video_url,
+                videoPosition: exercise.video_position || "center",
                 reps: exercise.reps,
                 sets: exercise.sets
               });
@@ -314,6 +316,7 @@ const TrainingExerciseSession = () => {
               exerciseNotes: exercise.notes,
               exerciseImage: media?.image_url,
               videoUrl: media?.video_url,
+              videoPosition: exercise.video_position || "center",
               reps: exercise.reps,
               sets: exercise.sets
             });
@@ -343,6 +346,22 @@ const TrainingExerciseSession = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getVideoPositionClass = (position?: string): string => {
+    switch (position) {
+      case "top":
+        return "object-top";
+      case "bottom":
+        return "object-bottom";
+      case "left":
+        return "object-left";
+      case "right":
+        return "object-right";
+      case "center":
+      default:
+        return "object-center";
+    }
   };
 
   const formatTimeNatural = useCallback((seconds: number): string => {
@@ -1062,12 +1081,12 @@ const TrainingExerciseSession = () => {
               }`}>
                 <CardContent className="p-4 sm:p-6 md:p-8">
                   {currentSegment.type === "exercise" ? (
-                    <div className="relative w-full h-[250px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden ring-1 ring-white/10 mb-6">
+                    <div className="relative w-full h-[250px] sm:h-[300px] md:h-[500px] md:max-w-sm md:mx-auto lg:max-w-md rounded-2xl overflow-hidden ring-1 ring-white/10 mb-6">
                       {currentSegment.videoUrl ? (
                         <video
                           ref={videoRef}
                           src={currentSegment.videoUrl}
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full object-cover ${getVideoPositionClass(currentSegment.videoPosition)}`}
                           autoPlay
                           muted
                           loop
@@ -1123,7 +1142,7 @@ const TrainingExerciseSession = () => {
                     </div>
                   ) : (
                     // Rest period display
-                    <div className="relative w-full h-[250px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden ring-1 ring-green-400/30 mb-6 bg-gradient-to-br from-green-500/20 to-cyan-500/20 flex items-center justify-center">
+                    <div className="relative w-full h-[250px] sm:h-[300px] md:h-[500px] md:max-w-sm md:mx-auto lg:max-w-md rounded-2xl overflow-hidden ring-1 ring-green-400/30 mb-6 bg-gradient-to-br from-green-500/20 to-cyan-500/20 flex items-center justify-center">
                       <Hand className="w-24 h-24 sm:w-32 sm:h-32 text-green-400 opacity-80" />
                     </div>
                   )}
