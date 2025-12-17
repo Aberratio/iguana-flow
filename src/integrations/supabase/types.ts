@@ -296,6 +296,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           difficulty_level: string | null
           end_date: string | null
@@ -317,6 +318,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           difficulty_level?: string | null
           end_date?: string | null
@@ -338,6 +340,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           difficulty_level?: string | null
           end_date?: string | null
@@ -530,6 +533,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           difficulty_level: string | null
           hold_time_seconds: number | null
@@ -554,6 +558,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           difficulty_level?: string | null
           hold_time_seconds?: number | null
@@ -578,6 +583,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           difficulty_level?: string | null
           hold_time_seconds?: number | null
@@ -1497,6 +1503,44 @@ export type Database = {
           },
         ]
       }
+      sport_guardians: {
+        Row: {
+          created_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          notes: string | null
+          sport_category_id: string
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          sport_category_id: string
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          sport_category_id?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sport_guardians_sport_category_id_fkey"
+            columns: ["sport_category_id"]
+            isOneToOne: false
+            referencedRelation: "sport_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sport_level_achievements: {
         Row: {
           achievement_id: string
@@ -1548,6 +1592,7 @@ export type Database = {
           challenge_id: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           is_demo: boolean | null
@@ -1562,6 +1607,7 @@ export type Database = {
           challenge_id?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_demo?: boolean | null
@@ -1576,6 +1622,7 @@ export type Database = {
           challenge_id?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_demo?: boolean | null
@@ -1853,6 +1900,7 @@ export type Database = {
           completions_count: number | null
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           difficulty_level: string | null
           duration_seconds: number | null
@@ -1873,6 +1921,7 @@ export type Database = {
           completions_count?: number | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           difficulty_level?: string | null
           duration_seconds?: number | null
@@ -1893,6 +1942,7 @@ export type Database = {
           completions_count?: number | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           difficulty_level?: string | null
           duration_seconds?: number | null
@@ -2994,6 +3044,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["user_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_sport_guardian: {
+        Args: { p_sport_category_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_sport_guardian_by_key: {
+        Args: { p_sport_key: string; p_user_id: string }
         Returns: boolean
       }
       join_challenge_simple: {
