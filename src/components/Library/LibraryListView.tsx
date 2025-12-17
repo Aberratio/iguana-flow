@@ -75,16 +75,7 @@ export const LibraryListView: React.FC<LibraryListViewProps> = ({
                     <h3 className="text-white font-semibold text-sm md:text-base leading-tight line-clamp-1 flex-1">
                       {figure.name}
                     </h3>
-                    
-                    {/* Premium badge */}
-                    {figure.premium && (
-                      <div className="flex-shrink-0">
-                        <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-1.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
-                          <Crown className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                          <span className="hidden sm:inline">PRO</span>
-                        </div>
-                      </div>
-                    )}
+                    {/* Premium badge - removed, only sport paths are paid */}
                   </div>
 
                   {/* Badges row */}

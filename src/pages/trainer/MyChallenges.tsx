@@ -19,7 +19,10 @@ import {
   Trophy,
   Filter,
   Calendar,
-  Users
+  Users,
+  BarChart3,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import {
   Select,
@@ -38,7 +41,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import SEO from '@/components/SEO';
+import ChallengeStatistics from '@/components/ChallengeStatistics';
 
 interface Challenge {
   id: string;
@@ -64,6 +73,7 @@ const MyChallenges: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [expandedStats, setExpandedStats] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user || roleLoading) return;
@@ -166,6 +176,18 @@ const MyChallenges: React.FC = () => {
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
+  };
+
+  const toggleStats = (challengeId: string) => {
+    setExpandedStats(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(challengeId)) {
+        newSet.delete(challengeId);
+      } else {
+        newSet.add(challengeId);
+      }
+      return newSet;
+    });
   };
 
   if (roleLoading) {
@@ -287,25 +309,43 @@ const MyChallenges: React.FC = () => {
                     {challenge.description || 'Brak opisu'}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
                       {challenge.participants_count || 0}
                     </div>
-                    {challenge.premium && (
-                      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-xs">
-                        Premium
-                      </Badge>
-                    )}
                     {challenge.difficulty_level && (
                       <Badge variant="outline" className="text-xs">
                         {challenge.difficulty_level}
                       </Badge>
                     )}
                   </div>
+
+                  {/* Statistics Section */}
+                  <Collapsible 
+                    open={expandedStats.has(challenge.id)}
+                    onOpenChange={() => toggleStats(challenge.id)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full justify-between px-2">
+                        <span className="flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4" />
+                          Statystyki
+                        </span>
+                        {expandedStats.has(challenge.id) ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <ChallengeStatistics challengeId={challenge.id} />
+                    </CollapsibleContent>
+                  </Collapsible>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-2">
                     <Button
                       variant="outline"
                       size="sm"

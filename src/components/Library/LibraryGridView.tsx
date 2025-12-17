@@ -48,15 +48,7 @@ export const LibraryGridView: React.FC<LibraryGridViewProps> = ({
                 </div>
               )}
 
-              {/* Premium badge */}
-              {figure.premium && (
-                <div className="absolute top-2 md:top-3 right-2 md:right-3 z-10">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
-                    <Crown className="w-3 h-3" />
-                    PRO
-                  </div>
-                </div>
-              )}
+              {/* Premium badge - removed, only sport paths are paid */}
 
               {/* Status icon */}
               {getStatusIcon(figure.progress_status) && (
