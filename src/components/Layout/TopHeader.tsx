@@ -7,6 +7,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 import ProfileAvatar from "./ProfileAvatar";
 import { AdminDropdown } from "./AdminDropdown";
+import { TrainerDropdown } from "./TrainerDropdown";
 import { AdminUserImpersonationModal } from "@/components/AdminUserImpersonationModal";
 
 const TopHeader: React.FC = () => {
@@ -67,7 +68,7 @@ const TopHeader: React.FC = () => {
           </nav>
         )}
 
-        {/* Right side - Biblioteka, Admin & Profile */}
+        {/* Right side - Biblioteka, Trainer, Admin & Profile */}
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
@@ -77,6 +78,9 @@ const TopHeader: React.FC = () => {
             <BookOpen className={cn("w-4 h-4", !isMobile && "mr-2")} />
             {!isMobile && <span>Biblioteka</span>}
           </Button>
+          {isTrainer && !isAdmin && (
+            <TrainerDropdown />
+          )}
           {isAdmin && (
             <AdminDropdown onImpersonateClick={() => setIsImpersonateModalOpen(true)} />
           )}

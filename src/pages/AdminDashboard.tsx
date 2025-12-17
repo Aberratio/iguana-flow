@@ -29,6 +29,7 @@ import { SystemHealthSection } from '@/components/Admin/SystemHealthSection';
 import { TopUsersSection } from '@/components/Admin/TopUsersSection';
 import { RedemptionCodesSection } from '@/components/Admin/RedemptionCodesSection';
 import { UserRoleManager } from '@/components/Admin/UserRoleManager';
+import { SportGuardiansManager } from '@/components/Admin/SportGuardiansManager';
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -319,8 +320,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Second Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <UserRoleManager />
+          <SportGuardiansManager />
           <RedemptionCodesSection />
         </div>
 

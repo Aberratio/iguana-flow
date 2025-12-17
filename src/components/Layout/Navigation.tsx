@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Trophy, User, LogOut, Bell, Users, Dumbbell, Settings, Crown, Lock, Globe, LayoutDashboard, Plane, UserCheck } from 'lucide-react';
+import { Home, BookOpen, Trophy, User, LogOut, Bell, Users, Dumbbell, Settings, Crown, Lock, Globe, LayoutDashboard, Plane, UserCheck, GraduationCap, FolderOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -115,6 +115,21 @@ const Navigation: React.FC<NavigationProps> = ({
     label: 'Biblioteka'
   }];
 
+  // Trainer-specific items (not admin)
+  const trainerItems = user?.role === 'trainer' && !isAdmin ? [{
+    path: '/trainer/my-challenges',
+    icon: Trophy,
+    label: 'Moje wyzwania'
+  }, {
+    path: '/trainer/my-trainings',
+    icon: Dumbbell,
+    label: 'Moje treningi'
+  }, {
+    path: '/trainer/my-exercises',
+    icon: FolderOpen,
+    label: 'Moje ćwiczenia'
+  }] : [];
+
   // Admin-only items
   const adminItems = user?.role === 'admin' ? [{
     path: '/admin/achievements',
@@ -199,6 +214,24 @@ const Navigation: React.FC<NavigationProps> = ({
               })}
             </>
           )}
+
+          {/* Trainer Section */}
+          {trainerItems.length > 0 && <>
+              <div className={`border-t border-white/10 ${isMobile ? 'my-2' : 'my-4'} ${isMobile ? 'block' : 'hidden lg:block'}`}></div>
+              <div className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2 ${isMobile ? 'block' : 'hidden lg:block'}`}>
+                <span className="flex items-center gap-1">
+                  <GraduationCap className="w-3 h-3" />
+                  Panel Trenera
+                </span>
+              </div>
+              {trainerItems.map(item => {
+            const Icon = item.icon;
+            return <Link key={item.path} to={item.path} onClick={isMobile ? onClose : undefined} className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all group ${isActive(item.path) ? 'bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 text-white' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>
+                    <Icon className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className={`font-medium ${isMobile ? 'block' : 'hidden lg:block'}`}>{item.label}</span>
+                  </Link>;
+          })}
+            </>}
 
           {/* Admin Section */}
           {adminItems.length > 0 && <>
