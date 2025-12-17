@@ -56,6 +56,7 @@ import TrainingLibrarySession from "@/pages/TrainingLibrarySession";
 import MyTrainings from "@/pages/trainer/MyTrainings";
 import MyChallenges from "@/pages/trainer/MyChallenges";
 import MyExercises from "@/pages/trainer/MyExercises";
+import MySports from "@/pages/trainer/MySports";
 
 
 const queryClient = new QueryClient({
@@ -471,6 +472,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <MyExercises />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/trainer/my-sports"
+        element={
+          <ProtectedRoute>
+            <MySports />
           </ProtectedRoute>
         }
       />

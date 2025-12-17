@@ -416,9 +416,9 @@ const EditChallenge = () => {
           type: type,
           image_url: uploadedImageUrl || null,
           status: isPublished ? "published" : "draft",
-          premium: isPremium,
-          price_usd: isPremium ? priceUsd : null,
-          price_pln: isPremium ? pricePln : null,
+          premium: false, // Challenges are always free - only sport paths are paid
+          price_usd: null,
+          price_pln: null,
         })
         .eq("id", challengeId);
 
@@ -969,59 +969,7 @@ const EditChallenge = () => {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">Access Level</Label>
-                <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                  <Switch checked={isPremium} onCheckedChange={setIsPremium} />
-                  <div className="flex-1">
-                    <div className="font-medium">
-                      {isPremium ? "Premium" : "Free"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {isPremium
-                        ? "Only premium users can join"
-                        : "All users can join this challenge"}
-                    </div>
-                  </div>
-                  <Badge variant={isPremium ? "default" : "secondary"}>
-                    {isPremium ? "Premium" : "Free"}
-                  </Badge>
-                </div>
-
-                {/* Price Settings - only show when premium is enabled */}
-                {isPremium && (
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price-usd">Price USD (cents)</Label>
-                      <Input
-                        id="price-usd"
-                        type="number"
-                        value={priceUsd}
-                        onChange={(e) => setPriceUsd(Number(e.target.value))}
-                        placeholder="999"
-                        className="bg-white/5 border-white/20"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        ${(priceUsd / 100).toFixed(2)} USD
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="price-pln">Price PLN (cents)</Label>
-                      <Input
-                        id="price-pln"
-                        type="number"
-                        value={pricePln}
-                        onChange={(e) => setPricePln(Number(e.target.value))}
-                        placeholder="3999"
-                        className="bg-white/5 border-white/20"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {(pricePln / 100).toFixed(2)} PLN
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Premium section removed - only sport paths are paid */}
             </div>
 
             {/* Achievements Section */}

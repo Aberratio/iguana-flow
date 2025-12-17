@@ -3,9 +3,7 @@ import {
   Trophy,
   Clock,
   Plus,
-  Crown,
   TrendingUp,
-  Lock,
   Filter,
   LayoutGrid,
   List,
@@ -18,15 +16,14 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useToast } from "@/hooks/use-toast";
 import ChallengePreviewModal from "@/components/ChallengePreviewModal";
 import CreateChallengeModal from "@/components/CreateChallengeModal";
-import ChallengePurchaseModal from "@/components/ChallengePurchaseModal";
+// ChallengePurchaseModal removed - only sport paths are paid
 import ChallengeFiltersBar from "@/components/ChallengeFiltersBar";
 import ChallengeFiltersSheet from "@/components/ChallengeFiltersSheet";
 import ChallengePathCard from "@/components/ChallengePathCard";
 import ChallengeGridView from "@/components/Challenge/ChallengeGridView";
 import { ChallengeListView } from "@/components/Challenge/ChallengeListView";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { useChallengeAccess } from "@/hooks/useChallengeAccess";
+// useSubscriptionStatus and useChallengeAccess removed - only sport paths are paid
 import { useChallengeFilters } from "@/hooks/useChallengeFilters";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -70,9 +67,7 @@ const Challenges = () => {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const [challengeToPurchase, setChallengeToPurchase] =
-    useState<Challenge | null>(null);
+  // Purchase modal removed - only sport paths are paid
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -85,9 +80,7 @@ const Challenges = () => {
     isAdmin,
     isLoading: roleLoading,
   } = useUserRole();
-  const { hasPremiumAccess } = useSubscriptionStatus();
-  const { userPurchases, refreshPurchases, checkChallengeAccess } =
-    useChallengeAccess();
+  // Premium access check removed - only sport paths are paid
   const { user } = useAuth();
   const { toast } = useToast();
   const { getDifficultyLabel, getDifficultyColor: getDifficultyColorFromDict } =
@@ -381,15 +374,7 @@ const Challenges = () => {
       return;
     }
 
-    // Check if challenge is premium and user has access
-    if (challenge.premium) {
-      const hasAccess = await checkChallengeAccess(challengeId);
-      if (!hasAccess) {
-        setChallengeToPurchase(challenge);
-        setIsPurchaseModalOpen(true);
-        return;
-      }
-    }
+    // Premium check removed - challenges are free, only sport paths are paid
 
     try {
       const { error, data } = await supabase
@@ -456,10 +441,9 @@ const Challenges = () => {
   };
 
   const renderChallengeCard = (challenge: Challenge) => {
-    const isPremiumLocked =
-      challenge.premium && !hasPremiumAccess && !userPurchases[challenge.id];
-    const showBadge = challenge.premium || challenge.is_new;
-    const badgeType = challenge.premium ? "premium" : "new";
+    // Premium lock removed - challenges are free
+    const showBadge = challenge.is_new;
+    const badgeType = "new";
 
     return (
       <Card
@@ -478,18 +462,7 @@ const Challenges = () => {
           </div>
         )}
         
-        {/* Premium Badge - mały, bez blura */}
-        {isPremiumLocked && (
-          <div className="absolute top-2 right-2 z-10">
-            <Badge
-              variant="default"
-              className="bg-yellow-500/90 backdrop-blur-sm"
-            >
-              <Crown className="w-3 h-3 mr-1" />
-              Premium
-            </Badge>
-          </div>
-        )}
+        {/* Premium badge removed - challenges are free */}
 
         <CardContent className="p-0">
           {/* Thumbnail 16:9 */}
@@ -502,14 +475,13 @@ const Challenges = () => {
                 onClick={() => openChallengeModal(challenge)}
               />
             </AspectRatio>
-            {/* Only 1 badge - Priority: Premium > New */}
+            {/* Only show New badge */}
             {showBadge && (
               <Badge
-                variant={badgeType === "premium" ? "default" : "secondary"}
+                variant="secondary"
                 className="absolute top-2 right-2"
               >
-                {badgeType === "premium" && <Crown className="w-3 h-3 mr-1" />}
-                {badgeType === "premium" ? "Premium" : "Nowe"}
+                Nowe
               </Badge>
             )}
           </div>
@@ -591,11 +563,6 @@ const Challenges = () => {
                 className={challenge.userParticipating ? "w-full" : "flex-1"}
                 onClick={async (e) => {
                   e.stopPropagation();
-                  if (isPremiumLocked) {
-                    setChallengeToPurchase(challenge);
-                    setIsPurchaseModalOpen(true);
-                    return;
-                  }
                   if (challenge.status === "active") {
                     navigate(`/challenges/${challenge.id}`);
                   } else if (challenge.status === "completed") {
@@ -605,7 +572,7 @@ const Challenges = () => {
                   }
                 }}
               >
-                {isPremiumLocked ? "Wykup" : getButtonText(challenge.status)}
+                {getButtonText(challenge.status)}
               </Button>
             </div>
 
@@ -766,12 +733,7 @@ const Challenges = () => {
                         challenges={seriesList}
                         onChallengeClick={openChallengeModal}
                         onJoinChallenge={handleJoinChallenge}
-                        hasAccess={
-                          hasPremiumAccess ||
-                          seriesList.every(
-                            (c) => !c.premium || userPurchases[c.id]
-                          )
-                        }
+                        hasAccess={true}
                       />
                     )
                   )}
@@ -797,15 +759,12 @@ const Challenges = () => {
                     onChallengeClick={(challenge) =>
                       openChallengeModal(challenge)
                     }
-                    onPurchase={(challenge) => {
-                      setChallengeToPurchase(challenge);
-                      setIsPurchaseModalOpen(true);
-                    }}
+                    onPurchase={() => {}}
                     onJoinChallenge={handleJoinChallenge}
                     getDifficultyColor={getDifficultyColor}
                     getButtonText={getButtonText}
-                    userPurchases={userPurchases}
-                    hasPremiumAccess={hasPremiumAccess}
+                    userPurchases={{}}
+                    hasPremiumAccess={true}
                   />
                 )}
               </div>
@@ -844,20 +803,7 @@ const Challenges = () => {
         onChallengeCreated={fetchChallenges}
       />
 
-      {challengeToPurchase && (
-        <ChallengePurchaseModal
-          isOpen={isPurchaseModalOpen}
-          onClose={() => {
-            setIsPurchaseModalOpen(false);
-            setChallengeToPurchase(null);
-          }}
-          challenge={challengeToPurchase}
-          onPurchaseSuccess={() => {
-            refreshPurchases();
-            fetchChallenges();
-          }}
-        />
-      )}
+      {/* ChallengePurchaseModal removed - only sport paths are paid */}
     </div>
     </>
   );

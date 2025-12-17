@@ -33,11 +33,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { useChallengeAccess } from "@/hooks/useChallengeAccess";
+// useSubscriptionStatus and useChallengeAccess removed - only sport paths are paid
 import { useChallengeCalendar } from "@/hooks/useChallengeCalendar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ChallengePurchaseModal from "@/components/ChallengePurchaseModal";
+// ChallengePurchaseModal removed - only sport paths are paid
 import { ChallengeCompletionCelebration } from "@/components/ChallengeCompletionCelebration";
 import { ChallengeExerciseInfoModal } from "@/components/ChallengeExerciseInfoModal";
 import { format } from "date-fns";
@@ -94,16 +93,14 @@ const ChallengePreview = () => {
   const { user, isImpersonating, originalAdminUser } = useAuth();
   const { toast } = useToast();
   const { canCreateChallenges, isAdmin } = useUserRole();
-  const { hasPremiumAccess } = useSubscriptionStatus();
-  const { userPurchases, refreshPurchases, checkChallengeAccess } =
-    useChallengeAccess();
+  // Premium hooks removed - only sport paths are paid
   const isMobile = useIsMobile();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [isParticipant, setIsParticipant] = useState(false);
   const [userParticipant, setUserParticipant] = useState<any>(null);
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  // isPurchaseModalOpen removed - only sport paths are paid
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
   const [selectedFigure, setSelectedFigure] = useState<{
@@ -253,13 +250,7 @@ const ChallengePreview = () => {
   const joinChallenge = async () => {
     if (!challengeId || !user?.id || isParticipant) return;
 
-    if (challenge?.premium) {
-      const hasAccess = await checkChallengeAccess(challengeId);
-      if (!hasAccess) {
-        setIsPurchaseModalOpen(true);
-        return;
-      }
-    }
+    // Premium check removed - challenges are free, only sport paths are paid
 
     setIsJoining(true);
     try {
@@ -530,9 +521,7 @@ const ChallengePreview = () => {
       : `0:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Calculate premium lock status for security
-  const isPremiumLocked =
-    challenge?.premium && !hasPremiumAccess && !userPurchases[challenge.id];
+  // Premium lock removed - challenges are free
 
   if (isLoading) {
     return (
@@ -632,13 +621,7 @@ const ChallengePreview = () => {
           {!isParticipant && (
             <div className="text-center">
               <Button
-                onClick={async () => {
-                  if (isPremiumLocked) {
-                    setIsPurchaseModalOpen(true);
-                  } else {
-                    await joinChallenge();
-                  }
-                }}
+                onClick={joinChallenge}
                 disabled={isJoining}
                 className="bg-gradient-to-r from-primary to-primary-foreground hover:shadow-lg hover:shadow-primary/25 text-white px-8 py-4 text-lg font-bold rounded-2xl shadow-xl transition-all duration-300 hover:scale-105"
               >
@@ -646,13 +629,6 @@ const ChallengePreview = () => {
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Dołączanie...
-                  </>
-                ) : challenge?.premium &&
-                  !hasPremiumAccess &&
-                  !userPurchases[challenge.id] ? (
-                  <>
-                    <Crown className="w-5 h-5 mr-2" />
-                    Wykup wyzwanie
                   </>
                 ) : (
                   <>
@@ -1064,17 +1040,7 @@ const ChallengePreview = () => {
 
       <div className="pb-4"></div>
 
-      {/* Purchase Modal */}
-      <ChallengePurchaseModal
-        isOpen={isPurchaseModalOpen}
-        onClose={() => setIsPurchaseModalOpen(false)}
-        challenge={challenge}
-        onPurchaseSuccess={() => {
-          setIsPurchaseModalOpen(false);
-          refreshPurchases();
-          joinChallenge();
-        }}
-      />
+      {/* ChallengePurchaseModal removed - only sport paths are paid */}
 
       {/* Challenge Completion Celebration */}
       {showCelebration && challengeCompletionData && (

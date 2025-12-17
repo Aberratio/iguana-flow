@@ -4,9 +4,9 @@ import {
   Trophy, 
   BookOpen, 
   Dumbbell,
-  Plane,
   FolderOpen,
-  GraduationCap
+  GraduationCap,
+  Shield
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSportGuardian } from '@/hooks/useSportGuardian';
 
 export const TrainerDropdown: React.FC = () => {
-  const { guardianships, hasAnyGuardianship } = useSportGuardian();
+  const { hasAnyGuardianship } = useSportGuardian();
 
   return (
     <DropdownMenu>
@@ -36,6 +36,19 @@ export const TrainerDropdown: React.FC = () => {
       <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-lg border-border">
         <DropdownMenuLabel>Panel Trenera</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border" />
+        
+        {hasAnyGuardianship && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link to="/trainer/my-sports" className="cursor-pointer">
+                <Shield className="w-4 h-4 mr-2 text-primary" />
+                Moje sporty
+                <Badge variant="secondary" className="ml-auto text-xs">Opiekun</Badge>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-border" />
+          </>
+        )}
         
         <DropdownMenuItem asChild>
           <Link to="/trainer/my-challenges" className="cursor-pointer">
@@ -57,27 +70,6 @@ export const TrainerDropdown: React.FC = () => {
             Moje ćwiczenia
           </Link>
         </DropdownMenuItem>
-
-        {hasAnyGuardianship && (
-          <>
-            <DropdownMenuSeparator className="bg-border" />
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Sporty, którymi się opiekuję
-            </DropdownMenuLabel>
-            
-            {guardianships.map((sport) => (
-              <DropdownMenuItem key={sport.sport_category_id} asChild>
-                <Link 
-                  to={`/aerial-journey/sport/${sport.sport_key}`} 
-                  className="cursor-pointer"
-                >
-                  <Plane className="w-4 h-4 mr-2" />
-                  {sport.sport_name}
-                </Link>
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
         
         <DropdownMenuSeparator className="bg-border" />
         
