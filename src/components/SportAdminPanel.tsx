@@ -14,8 +14,10 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { Plus, Edit, Trash2, Save, Home, Settings, Target } from "lucide-react";
+import { Plus, Edit, Trash2, Save, Home, Settings, Target, Eye, ArrowLeft, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useSportGuardian } from "@/hooks/useSportGuardian";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -51,6 +53,11 @@ interface SportAdminPanelProps {
 const SportAdminPanel = ({ sportKey }: SportAdminPanelProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
+  const { isGuardianOfByKey } = useSportGuardian();
+  
+  const isGuardian = isGuardianOfByKey(sportKey);
+  const canManage = isAdmin || isGuardian;
   
   const [sportCategory, setSportCategory] = useState<SportCategory | null>(null);
   const [levels, setLevels] = useState<SportLevel[]>([]);
@@ -225,17 +232,17 @@ const SportAdminPanel = ({ sportKey }: SportAdminPanelProps) => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink 
-                onClick={() => navigate('/aerial-journey')}
+                onClick={() => navigate(isAdmin ? '/aerial-journey' : '/trainer/my-sports')}
                 className="text-white/70 hover:text-white cursor-pointer flex items-center gap-1"
               >
-                <Home className="w-4 h-4" />
-                Podróż
+                {isAdmin ? <Home className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                {isAdmin ? 'Podróż' : 'Moje sporty'}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbPage className="text-white font-medium">
-                Zarządzanie {sportCategory.name}
+                Edycja: {sportCategory.name}
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
@@ -256,10 +263,36 @@ const SportAdminPanel = ({ sportKey }: SportAdminPanelProps) => {
               >
                 {sportCategory.is_published ? "Opublikowane" : "Wersja Robocza"}
               </Badge>
+              {isGuardian && !isAdmin && (
+                <Badge className="bg-purple-500/20 text-purple-400 border-purple-400/30">
+                  <Shield className="w-3 h-3 mr-1" />
+                  Opiekun
+                </Badge>
+              )}
             </h1>
             <p className="text-muted-foreground mt-1">
               Zarządzaj informacjami o sporcie i poziomami umiejętności
             </p>
+          </div>
+          
+          {/* Quick actions */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/aerial-journey/sport/${sportKey}`)}
+              className="border-white/20"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Widok użytkownika
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/aerial-journey/preview/${sportKey}`)}
+              className="border-blue-400/30 text-blue-400 hover:bg-blue-400/10"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Podgląd trenera
+            </Button>
           </div>
         </div>
 
