@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSportGuardian } from '@/hooks/useSportGuardian';
 
 export const TrainerDropdown: React.FC = () => {
-  const { hasAnyGuardianship } = useSportGuardian();
+  const { hasAnyGuardianship, guardianships } = useSportGuardian();
 
   return (
     <DropdownMenu>
@@ -31,6 +31,11 @@ export const TrainerDropdown: React.FC = () => {
           <Badge variant="outline" className="hidden sm:inline-flex border-purple-500/50 text-purple-400">
             Trener
           </Badge>
+          {hasAnyGuardianship && (
+            <Badge className="hidden sm:inline-flex bg-purple-500/20 text-purple-400 border-purple-400/30 text-xs">
+              <Shield className="w-3 h-3" />
+            </Badge>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-lg border-border">
@@ -40,10 +45,12 @@ export const TrainerDropdown: React.FC = () => {
         {hasAnyGuardianship && (
           <>
             <DropdownMenuItem asChild>
-              <Link to="/trainer/my-sports" className="cursor-pointer">
-                <Shield className="w-4 h-4 mr-2 text-primary" />
+              <Link to="/trainer/my-sports" className="cursor-pointer flex items-center">
+                <Shield className="w-4 h-4 mr-2 text-purple-400" />
                 Moje sporty
-                <Badge variant="secondary" className="ml-auto text-xs">Opiekun</Badge>
+                <Badge variant="secondary" className="ml-auto text-xs bg-purple-500/20 text-purple-400">
+                  {guardianships.length}
+                </Badge>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-border" />
