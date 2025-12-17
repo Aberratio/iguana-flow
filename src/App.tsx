@@ -52,6 +52,10 @@ import TrainingLibrary from "@/pages/TrainingLibrary";
 import TrainingLibraryDetail from "@/pages/TrainingLibraryDetail";
 import TrainingLibrarySession from "@/pages/TrainingLibrarySession";
 
+// Trainer pages
+import MyTrainings from "@/pages/trainer/MyTrainings";
+import MyChallenges from "@/pages/trainer/MyChallenges";
+import MyExercises from "@/pages/trainer/MyExercises";
 
 
 const queryClient = new QueryClient({
@@ -442,6 +446,31 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <SiteSettings />
+          </ProtectedRoute>
+        }
+      />
+      {/* Trainer routes */}
+      <Route
+        path="/trainer/my-trainings"
+        element={
+          <ProtectedRoute>
+            <MyTrainings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/trainer/my-challenges"
+        element={
+          <ProtectedRoute>
+            <MyChallenges />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/trainer/my-exercises"
+        element={
+          <ProtectedRoute>
+            <MyExercises />
           </ProtectedRoute>
         }
       />
