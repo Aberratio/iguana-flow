@@ -305,10 +305,6 @@ const MyExercises: React.FC = () => {
                         Edytuj
                       </Button>
                     )}
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edytuj
-                      </Button>
-                    )}
                     <Button
                       variant="ghost"
                       size="icon"
