@@ -163,7 +163,7 @@ const MyExercises: React.FC = () => {
               Zarządzaj ćwiczeniami, które stworzyłeś
             </p>
           </div>
-          <Button onClick={() => navigate('/training/exercises/create')}>
+          <Button onClick={() => navigate('/exercise/new')}>
             <Plus className="w-4 h-4 mr-2" />
             Nowe ćwiczenie
           </Button>
@@ -211,7 +211,7 @@ const MyExercises: React.FC = () => {
                   : 'Nie masz jeszcze żadnych ćwiczeń. Stwórz pierwsze!'}
               </p>
               {statusFilter !== 'archived' && (
-                <Button onClick={() => navigate('/training/exercises/create')}>
+                <Button onClick={() => navigate('/exercise/new')}>
                   <Plus className="w-4 h-4 mr-2" />
                   Stwórz ćwiczenie
                 </Button>
@@ -289,7 +289,7 @@ const MyExercises: React.FC = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => navigate(`/training/exercises/${exercise.id}`)}
+                      onClick={() => navigate(`/exercise/${exercise.id}`)}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Podgląd
@@ -299,8 +299,12 @@ const MyExercises: React.FC = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => navigate(`/training/exercises/${exercise.id}/edit`)}
+                        onClick={() => navigate(`/exercise/${exercise.id}/edit`)}
                       >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edytuj
+                      </Button>
+                    )}
                         <Edit className="w-4 h-4 mr-1" />
                         Edytuj
                       </Button>

@@ -56,6 +56,17 @@ export const SimilarExercisesManager = ({
   });
   const { toast } = useToast();
 
+  const categories = useMemo(() => [
+    { value: "all", label: "Wszystkie kategorie" },
+    { value: "silks", label: "Szarfy" },
+    { value: "hoop", label: "Aerial Hoop" },
+    { value: "pole", label: "Pole Dance" },
+    { value: "hammock", label: "Hamak" },
+    { value: "core", label: "Core / Siła" },
+    { value: "warm_up", label: "Rozgrzewka" },
+    { value: "stretching", label: "Rozciąganie" },
+  ], []);
+
   // Fetch current exercise details for smart suggestions
   useEffect(() => {
     const fetchCurrentExercise = async () => {
@@ -160,8 +171,8 @@ export const SimilarExercisesManager = ({
     } catch (error) {
       console.error("Error searching exercises:", error);
       toast({
-        title: "Search Error",
-        description: "Failed to search exercises. Please try again.",
+        title: "Błąd wyszukiwania",
+        description: "Nie udało się wyszukać ćwiczeń. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -173,16 +184,16 @@ export const SimilarExercisesManager = ({
     try {
       await addSimilarExercise(exerciseId);
       toast({
-        title: "Success",
-        description: "Similar exercise added successfully.",
+        title: "Dodano",
+        description: "Podobne ćwiczenie zostało dodane.",
       });
       // Remove from search results
       setSearchResults((prev) => prev.filter((ex) => ex.id !== exerciseId));
     } catch (error) {
       console.error("Error adding similar exercise:", error);
       toast({
-        title: "Error",
-        description: "Failed to add similar exercise.",
+        title: "Błąd",
+        description: "Nie udało się dodać podobnego ćwiczenia.",
         variant: "destructive",
       });
     }
@@ -192,14 +203,14 @@ export const SimilarExercisesManager = ({
     try {
       await removeSimilarExercise(exerciseId);
       toast({
-        title: "Success",
-        description: "Similar exercise removed successfully.",
+        title: "Usunięto",
+        description: "Podobne ćwiczenie zostało usunięte.",
       });
     } catch (error) {
       console.error("Error removing similar exercise:", error);
       toast({
-        title: "Error",
-        description: "Failed to remove similar exercise.",
+        title: "Błąd",
+        description: "Nie udało się usunąć podobnego ćwiczenia.",
         variant: "destructive",
       });
     }
@@ -237,7 +248,7 @@ export const SimilarExercisesManager = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <Label className="text-foreground text-lg font-semibold">
-                Similar Exercises ({similarExercises.length})
+                Podobne ćwiczenia ({similarExercises.length})
               </Label>
             </div>
 
@@ -295,7 +306,7 @@ export const SimilarExercisesManager = ({
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-foreground text-lg font-semibold">
-              Add Similar Exercise
+              Dodaj podobne ćwiczenie
             </Label>
             <Button
               type="button"
@@ -305,7 +316,7 @@ export const SimilarExercisesManager = ({
               className="border-border/50 hover:bg-accent/50"
             >
               <Filter className="w-4 h-4 mr-2" />
-              Filters
+              Filtry
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="ml-2 text-xs">
                   {activeFiltersCount}
@@ -325,7 +336,7 @@ export const SimilarExercisesManager = ({
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, description, tags, or synonyms..."
+              placeholder="Szukaj po nazwie, opisie, tagach lub synonimach..."
               className="bg-background/50 border-border/50 text-foreground pl-10"
             />
             {(searchQuery || activeFiltersCount > 0) && (
@@ -346,7 +357,7 @@ export const SimilarExercisesManager = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-accent/10 rounded-lg border border-border/30">
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">
-                  Category
+                  Kategoria
                 </Label>
                 <Select
                   value={filters.category}
@@ -358,25 +369,18 @@ export const SimilarExercisesManager = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="silks">Silks</SelectItem>
-                    <SelectItem value="hoop">Hoop</SelectItem>
-                    <SelectItem value="pole">Pole</SelectItem>
-                    <SelectItem value="hammock">Hammock</SelectItem>
-                    <SelectItem value="core">Core</SelectItem>
-                    <SelectItem value="warm_up">
-                      {getFigureTypeLabel("warm_up")}
-                    </SelectItem>
-                    <SelectItem value="stretching">
-                      {getFigureTypeLabel("stretching")}
-                    </SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">
-                  Difficulty
+                  Trudność
                 </Label>
                 <Select
                   value={filters.difficulty}
@@ -388,17 +392,16 @@ export const SimilarExercisesManager = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="Beginner">Początkujący</SelectItem>
-                    <SelectItem value="Intermediate">Średni</SelectItem>
-                    <SelectItem value="Advanced">Zaawansowany</SelectItem>
-                    <SelectItem value="Expert">Expert</SelectItem>
+                    <SelectItem value="all">Wszystkie poziomy</SelectItem>
+                    <SelectItem value="beginner">Początkujący</SelectItem>
+                    <SelectItem value="intermediate">Średniozaawansowany</SelectItem>
+                    <SelectItem value="advanced">Zaawansowany</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Type</Label>
+                <Label className="text-xs text-muted-foreground">Typ</Label>
                 <Select
                   value={filters.type}
                   onValueChange={(value) =>
@@ -409,7 +412,7 @@ export const SimilarExercisesManager = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="all">Wszystkie typy</SelectItem>
                     <SelectItem value="single_figure">
                       {getFigureTypeLabel("single_figure")}
                     </SelectItem>
@@ -427,7 +430,7 @@ export const SimilarExercisesManager = ({
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Access</Label>
+                <Label className="text-xs text-muted-foreground">Dostęp</Label>
                 <Select
                   value={filters.premium}
                   onValueChange={(value) =>
@@ -438,8 +441,8 @@ export const SimilarExercisesManager = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Access</SelectItem>
-                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="all">Wszystkie</SelectItem>
+                    <SelectItem value="free">Darmowe</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
                   </SelectContent>
                 </Select>
@@ -452,12 +455,12 @@ export const SimilarExercisesManager = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm text-muted-foreground">
-                  Found {searchResults.length} exercises
+                  Znaleziono {searchResults.length} ćwiczeń
                 </Label>
                 {isSearching && (
                   <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                     <div className="animate-spin w-3 h-3 border border-primary border-t-transparent rounded-full"></div>
-                    <span>Searching...</span>
+                    <span>Szukam...</span>
                   </div>
                 )}
               </div>
@@ -544,7 +547,7 @@ export const SimilarExercisesManager = ({
             !isSearching && (
               <div className="text-center py-6">
                 <p className="text-muted-foreground text-sm">
-                  No exercises found matching your criteria
+                  Nie znaleziono ćwiczeń spełniających kryteria
                 </p>
                 <Button
                   type="button"
@@ -553,7 +556,7 @@ export const SimilarExercisesManager = ({
                   onClick={clearAllFilters}
                   className="mt-2"
                 >
-                  Clear all filters
+                  Wyczyść filtry
                 </Button>
               </div>
             )}
@@ -564,7 +567,7 @@ export const SimilarExercisesManager = ({
             currentExercise && (
               <div className="text-center py-4">
                 <p className="text-muted-foreground text-sm mb-2">
-                  Try searching for exercises similar to{" "}
+                  Szukaj ćwiczeń podobnych do{" "}
                   <strong>{currentExercise.name}</strong>
                 </p>
                 <div className="flex justify-center space-x-2 text-xs">
@@ -595,7 +598,7 @@ export const SimilarExercisesManager = ({
                         }))
                       }
                     >
-                      {currentExercise.difficulty_level}
+                      {getDifficultyLabel(currentExercise.difficulty_level)}
                     </Button>
                   )}
                 </div>

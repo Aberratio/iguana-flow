@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,13 +18,13 @@ import {
   Filter, 
   ChevronDown, 
   ChevronUp,
-  Star,
   Crown,
   BookOpen
 } from "lucide-react";
 import { usePrerequisiteExercises } from "@/hooks/usePrerequisiteExercises";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useDictionary } from "@/contexts/DictionaryContext";
 
 interface PrerequisiteExercisesManagerProps {
   figureId: string;
@@ -39,6 +39,7 @@ interface SearchFilters {
 
 export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercisesManagerProps) => {
   const { prerequisiteExercises, addPrerequisiteExercise, removePrerequisiteExercise } = usePrerequisiteExercises(figureId);
+  const { getDifficultyLabel, getFigureTypeLabel } = useDictionary();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -51,6 +52,26 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
     premium: "all"
   });
   const { toast } = useToast();
+
+  const categories = useMemo(() => [
+    { value: "all", label: "Wszystkie kategorie" },
+    { value: "silks", label: "Szarfy" },
+    { value: "hoop", label: "Aerial Hoop" },
+    { value: "pole", label: "Pole Dance" },
+    { value: "hammock", label: "Hamak" },
+    { value: "core", label: "Core / Siła" },
+    { value: "warm_up", label: "Rozgrzewka" },
+    { value: "stretching", label: "Rozciąganie" },
+  ], []);
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'beginner': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'intermediate': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'advanced': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   // Fetch current exercise details for smart suggestions
   useEffect(() => {
@@ -129,11 +150,10 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
       const filtered = data?.filter(ex => !prerequisiteIds.includes(ex.id)) || [];
       
       // Sort by relevance (easier difficulty first for prerequisites)
+      const difficultyOrder: Record<string, number> = { 'beginner': 1, 'intermediate': 2, 'advanced': 3 };
       const sorted = filtered.sort((a, b) => {
-        const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3, 'Expert': 4 };
-        const aScore = difficultyOrder[a.difficulty_level as keyof typeof difficultyOrder] || 5;
-        const bScore = difficultyOrder[b.difficulty_level as keyof typeof difficultyOrder] || 5;
-        
+        const aScore = difficultyOrder[a.difficulty_level?.toLowerCase()] || 5;
+        const bScore = difficultyOrder[b.difficulty_level?.toLowerCase()] || 5;
         return aScore - bScore; // Easier exercises first
       });
       
@@ -141,8 +161,8 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
     } catch (error) {
       console.error('Error searching exercises:', error);
       toast({
-        title: "Search Error",
-        description: "Failed to search exercises. Please try again.",
+        title: "Błąd wyszukiwania",
+        description: "Nie udało się wyszukać ćwiczeń. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -154,16 +174,16 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
     try {
       await addPrerequisiteExercise(exerciseId);
       toast({
-        title: "Success",
-        description: "Prerequisite exercise added successfully.",
+        title: "Dodano",
+        description: "Ćwiczenie podstawowe zostało dodane.",
       });
       // Remove from search results
       setSearchResults(prev => prev.filter(ex => ex.id !== exerciseId));
     } catch (error) {
       console.error('Error adding prerequisite exercise:', error);
       toast({
-        title: "Error",
-        description: "Failed to add prerequisite exercise.",
+        title: "Błąd",
+        description: "Nie udało się dodać ćwiczenia podstawowego.",
         variant: "destructive",
       });
     }
@@ -173,14 +193,14 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
     try {
       await removePrerequisiteExercise(exerciseId);
       toast({
-        title: "Success",
-        description: "Prerequisite exercise removed successfully.",
+        title: "Usunięto",
+        description: "Ćwiczenie podstawowe zostało usunięte.",
       });
     } catch (error) {
       console.error('Error removing prerequisite exercise:', error);
       toast({
-        title: "Error", 
-        description: "Failed to remove prerequisite exercise.",
+        title: "Błąd", 
+        description: "Nie udało się usunąć ćwiczenia podstawowego.",
         variant: "destructive",
       });
     }
@@ -196,16 +216,6 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
     setSearchQuery("");
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-blue-100 text-blue-800';
-      case 'Advanced': return 'bg-orange-100 text-orange-800';
-      case 'Expert': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const activeFiltersCount = Object.values(filters).filter(f => f !== "all").length;
 
   return (
@@ -217,7 +227,7 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
             <div className="flex items-center justify-between mb-3">
               <Label className="text-foreground text-lg font-semibold flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
-                Learn These First ({prerequisiteExercises.length})
+                Naucz się najpierw ({prerequisiteExercises.length})
               </Label>
             </div>
             
@@ -242,7 +252,7 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
                       <div className="flex items-center space-x-1 mt-1">
                         {exercise.difficulty_level && (
                           <Badge variant="secondary" className={`text-xs ${getDifficultyColor(exercise.difficulty_level)}`}>
-                            {exercise.difficulty_level}
+                            {getDifficultyLabel(exercise.difficulty_level)}
                           </Badge>
                         )}
                         {exercise.premium && (
@@ -276,7 +286,7 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
           <div className="flex items-center justify-between">
             <Label className="text-foreground text-lg font-semibold flex items-center gap-2">
               <Plus className="w-5 h-5" />
-              Add Prerequisite Exercise
+              Dodaj ćwiczenie podstawowe
             </Label>
             <Button
               type="button"
@@ -286,7 +296,7 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
               className="border-border/50 hover:bg-accent/50"
             >
               <Filter className="w-4 h-4 mr-2" />
-              Filters
+              Filtry
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="ml-2 text-xs">
                   {activeFiltersCount}
@@ -306,7 +316,7 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search foundational exercises..."
+              placeholder="Szukaj ćwiczeń podstawowych..."
               className="bg-background/50 border-border/50 text-foreground pl-10"
             />
             {(searchQuery || activeFiltersCount > 0) && (
@@ -326,65 +336,61 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
           {showFilters && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-accent/10 rounded-lg border border-border/30">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Category</Label>
+                <Label className="text-xs text-muted-foreground">Kategoria</Label>
                 <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({...prev, category: value}))}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="silks">Silks</SelectItem>
-                    <SelectItem value="hoop">Hoop</SelectItem>
-                    <SelectItem value="pole">Pole</SelectItem>
-                    <SelectItem value="hammock">Hammock</SelectItem>
-                    <SelectItem value="core">Core</SelectItem>
-                    <SelectItem value="warm_up">Warm Up</SelectItem>
-                    <SelectItem value="stretching">Stretching</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Difficulty</Label>
+                <Label className="text-xs text-muted-foreground">Trudność</Label>
                 <Select value={filters.difficulty} onValueChange={(value) => setFilters(prev => ({...prev, difficulty: value}))}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
-                    <SelectItem value="Expert">Expert</SelectItem>
+                    <SelectItem value="all">Wszystkie poziomy</SelectItem>
+                    <SelectItem value="beginner">Początkujący</SelectItem>
+                    <SelectItem value="intermediate">Średniozaawansowany</SelectItem>
+                    <SelectItem value="advanced">Zaawansowany</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Type</Label>
+                <Label className="text-xs text-muted-foreground">Typ</Label>
                 <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({...prev, type: value}))}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="single figure">Single Figure</SelectItem>
-                    <SelectItem value="combo">Combo</SelectItem>
-                    <SelectItem value="warm_up">Warm Up</SelectItem>
-                    <SelectItem value="stretching">Stretching</SelectItem>
+                    <SelectItem value="all">Wszystkie typy</SelectItem>
+                    <SelectItem value="single_figure">{getFigureTypeLabel("single_figure")}</SelectItem>
+                    <SelectItem value="combo">{getFigureTypeLabel("combo")}</SelectItem>
+                    <SelectItem value="warm_up">{getFigureTypeLabel("warm_up")}</SelectItem>
+                    <SelectItem value="stretching">{getFigureTypeLabel("stretching")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Access</Label>
+                <Label className="text-xs text-muted-foreground">Dostęp</Label>
                 <Select value={filters.premium} onValueChange={(value) => setFilters(prev => ({...prev, premium: value}))}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Access</SelectItem>
-                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="all">Wszystkie</SelectItem>
+                    <SelectItem value="free">Darmowe</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
                   </SelectContent>
                 </Select>
@@ -397,12 +403,12 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm text-muted-foreground">
-                  Found {searchResults.length} exercises (easier exercises shown first)
+                  Znaleziono {searchResults.length} ćwiczeń (łatwiejsze najpierw)
                 </Label>
                 {isSearching && (
                   <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                     <div className="animate-spin w-3 h-3 border border-primary border-t-transparent rounded-full"></div>
-                    <span>Searching...</span>
+                    <span>Szukam...</span>
                   </div>
                 )}
               </div>
@@ -439,7 +445,7 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
                           )}
                           {exercise.difficulty_level && (
                             <Badge variant="secondary" className={`text-xs ${getDifficultyColor(exercise.difficulty_level)}`}>
-                              {exercise.difficulty_level}
+                              {getDifficultyLabel(exercise.difficulty_level)}
                             </Badge>
                           )}
                           {exercise.premium && (
@@ -469,16 +475,16 @@ export const PrerequisiteExercisesManager = ({ figureId }: PrerequisiteExercises
           {searchQuery.length === 0 && activeFiltersCount === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">Start typing to search for foundational exercises</p>
-              <p className="text-xs mt-1">Find exercises that students should master before attempting this one</p>
+              <p className="text-sm">Zacznij pisać, aby wyszukać ćwiczenia podstawowe</p>
+              <p className="text-xs mt-1">Znajdź ćwiczenia, które uczniowie powinni opanować przed tym ćwiczeniem</p>
             </div>
           )}
 
           {searchQuery.length > 0 && searchResults.length === 0 && !isSearching && (
             <div className="text-center py-8 text-muted-foreground">
               <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">No exercises found</p>
-              <p className="text-xs mt-1">Try adjusting your search terms or filters</p>
+              <p className="text-sm">Nie znaleziono ćwiczeń</p>
+              <p className="text-xs mt-1">Spróbuj zmienić kryteria wyszukiwania</p>
             </div>
           )}
         </CardContent>

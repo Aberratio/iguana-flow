@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Save, ImageIcon, Video, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,17 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { SimilarExercisesManager } from "@/components/SimilarExercisesManager";
 import { PrerequisiteExercisesManager } from "@/components/PrerequisiteExercisesManager";
 import { useDictionary } from "@/contexts/DictionaryContext";
+import { z } from "zod";
+
+// Validation schema
+const exerciseSchema = z.object({
+  name: z.string().min(3, "Nazwa musi mieć minimum 3 znaki").max(100, "Nazwa może mieć maksymalnie 100 znaków"),
+  description: z.string().max(1000, "Opis może mieć maksymalnie 1000 znaków").optional(),
+  instructions: z.string().max(2000, "Instrukcje mogą mieć maksymalnie 2000 znaków").optional(),
+  difficulty_level: z.string().min(1, "Wybierz poziom trudności"),
+  category: z.string().min(1, "Wybierz kategorię"),
+  type: z.string().min(1, "Wybierz typ"),
+});
 
 const EditExercise = () => {
   const { exerciseId } = useParams();
@@ -29,7 +40,7 @@ const EditExercise = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isTrainer, isAdmin } = useUserRole();
-  const { getDifficultyLabel, getFigureTypeLabel, getSportCategoryLabel } = useDictionary();
+  const { difficultyLevels, figureTypes, sportCategories, getDifficultyLabel, getFigureTypeLabel, getSportCategoryLabel } = useDictionary();
 
   const isCreateMode = !exerciseId;
   const [exercise, setExercise] = useState<any>(null);
@@ -40,12 +51,12 @@ const EditExercise = () => {
     difficulty_level: "",
     category: "",
     type: "",
+    sport_category_id: "",
     image_url: "",
     video_url: "",
     audio_url: "",
     tags: [] as string[],
     synonyms: [] as string[],
-    premium: false,
     transition_from_figure_id: "",
     transition_to_figure_id: "",
     hold_time_seconds: 0,
@@ -58,7 +69,23 @@ const EditExercise = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Dynamic categories from dictionary
+  const categories = useMemo(() => {
+    const baseCategories = [
+      { value: "silks", label: "Szarfy" },
+      { value: "hoop", label: "Aerial Hoop" },
+      { value: "pole", label: "Pole Dance" },
+      { value: "hammock", label: "Hamak" },
+      { value: "core", label: "Core / Siła" },
+      { value: "warm_up", label: "Rozgrzewka" },
+      { value: "stretching", label: "Rozciąganie" },
+    ];
+    return baseCategories;
+  }, []);
 
   useEffect(() => {
     const fetchExercise = async () => {
@@ -84,12 +111,12 @@ const EditExercise = () => {
           difficulty_level: data.difficulty_level || "",
           category: data.category || "",
           type: data.type || "",
+          sport_category_id: data.sport_category_id || "",
           image_url: data.image_url || "",
           video_url: data.video_url || "",
           audio_url: data.audio_url || "",
           tags: data.tags || [],
           synonyms: data.synonyms || [],
-          premium: data.premium || false,
           transition_from_figure_id: data.transition_from_figure_id || "",
           transition_to_figure_id: data.transition_to_figure_id || "",
           hold_time_seconds: data.hold_time_seconds || 0,
@@ -99,8 +126,8 @@ const EditExercise = () => {
       } catch (error: any) {
         console.error("Error fetching exercise:", error);
         toast({
-          title: "Error",
-          description: "Failed to load exercise details",
+          title: "Błąd",
+          description: "Nie udało się załadować szczegółów ćwiczenia",
           variant: "destructive",
         });
         navigate("/library");
@@ -112,22 +139,58 @@ const EditExercise = () => {
     fetchExercise();
   }, [exerciseId, navigate, toast]);
 
+  const validateForm = () => {
+    try {
+      exerciseSchema.parse({
+        name: formData.name,
+        description: formData.description,
+        instructions: formData.instructions,
+        difficulty_level: formData.difficulty_level,
+        category: formData.category,
+        type: formData.type,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted with data:", formData);
     
-    if (!user || !formData.name.trim()) {
-      console.log("Validation failed:", { user: !!user, name: formData.name.trim() });
+    if (!validateForm()) {
+      toast({
+        title: "Błąd walidacji",
+        description: "Sprawdź poprawność wprowadzonych danych",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user) {
+      toast({
+        title: "Błąd",
+        description: "Musisz być zalogowany, aby zapisać ćwiczenie",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!isCreateMode && !exercise) {
-      console.log("Exercise not loaded for edit mode");
       return;
     }
 
     setIsLoading(true);
-    console.log(isCreateMode ? "Creating new exercise..." : "Updating exercise...");
 
     try {
       let imageUrl = formData.image_url;
@@ -188,7 +251,7 @@ const EditExercise = () => {
         audioUrl = audioData.publicUrl;
       }
 
-      // Normalize data before saving to prevent future issues
+      // Normalize data before saving
       const saveData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
@@ -196,12 +259,13 @@ const EditExercise = () => {
         difficulty_level: formData.difficulty_level?.toLowerCase() || null,
         category: formData.category || null,
         type: formData.type?.replace(/\s+/g, '_')?.toLowerCase() || null,
+        sport_category_id: formData.sport_category_id || null,
         image_url: imageUrl || null,
         video_url: videoUrl || null,
         audio_url: audioUrl || null,
         tags: formData.tags.length > 0 ? formData.tags : null,
         synonyms: formData.synonyms.length > 0 ? formData.synonyms : null,
-        premium: formData.premium,
+        premium: false, // Always false - premium is managed at sport path level
         transition_from_figure_id: formData.type === 'transitions' ? formData.transition_from_figure_id : null,
         transition_to_figure_id: formData.type === 'transitions' ? formData.transition_to_figure_id : null,
         hold_time_seconds: formData.hold_time_seconds > 0 ? formData.hold_time_seconds : null,
@@ -209,11 +273,8 @@ const EditExercise = () => {
         play_video: formData.play_video,
         ...(isCreateMode ? { created_by: user.id } : { updated_at: new Date().toISOString() }),
       };
-      
-      console.log(isCreateMode ? "Creating exercise with data:" : "Updating exercise with data:", saveData);
 
       if (isCreateMode) {
-        // CREATE MODE
         const { error, data } = await supabase
           .from("figures")
           .insert(saveData)
@@ -232,28 +293,23 @@ const EditExercise = () => {
         }
 
         toast({
-          title: "Exercise Created",
-          description: "Your exercise has been successfully created.",
+          title: "Ćwiczenie utworzone",
+          description: "Twoje ćwiczenie zostało pomyślnie utworzone.",
         });
 
         navigate(`/exercise/${data.id}`);
       } else {
-        // UPDATE MODE
-        console.log("Exercise ID:", exercise.id);
-
-        const { error, data } = await supabase
+        const { error } = await supabase
           .from("figures")
           .update(saveData)
           .eq("id", exercise.id)
           .select();
 
-        console.log("Update result:", { data, error });
-
         if (error) throw error;
 
         toast({
-          title: "Exercise Updated",
-          description: "Your exercise has been successfully updated.",
+          title: "Ćwiczenie zaktualizowane",
+          description: "Twoje ćwiczenie zostało pomyślnie zaktualizowane.",
         });
 
         navigate(`/exercise/${exerciseId}`);
@@ -261,8 +317,8 @@ const EditExercise = () => {
     } catch (error: any) {
       console.error("Error saving exercise:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to save exercise",
+        title: "Błąd zapisu",
+        description: error.message || "Nie udało się zapisać ćwiczenia. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -275,6 +331,13 @@ const EditExercise = () => {
     if (file) {
       setImageFile(file);
       setFormData((prev) => ({ ...prev, image_url: "" }));
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -353,9 +416,9 @@ const EditExercise = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Exercise not found</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Nie znaleziono ćwiczenia</h2>
           <Button onClick={() => navigate("/library")}>
-            Return to Library
+            Wróć do biblioteki
           </Button>
         </div>
       </div>
@@ -370,10 +433,10 @@ const EditExercise = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {isCreateMode ? "Create Exercise" : "Edit Exercise"}
+                {isCreateMode ? "Nowe ćwiczenie" : "Edycja ćwiczenia"}
               </h1>
               <p className="text-muted-foreground">
-                {isCreateMode ? "Add a new exercise to the library" : exercise?.name}
+                {isCreateMode ? "Dodaj nowe ćwiczenie do biblioteki" : exercise?.name}
               </p>
             </div>
             <Button
@@ -384,12 +447,12 @@ const EditExercise = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Saving...
+                  Zapisywanie...
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
+                  Zapisz
                 </>
               )}
             </Button>
@@ -403,12 +466,13 @@ const EditExercise = () => {
           {/* Basic Information */}
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-foreground">Basic Information</CardTitle>
+              <CardTitle className="text-foreground">Podstawowe informacje</CardTitle>
+              <CardDescription>Wypełnij podstawowe dane ćwiczenia</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="name" className="text-foreground">
-                  Exercise Name *
+                  Nazwa ćwiczenia <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -416,26 +480,32 @@ const EditExercise = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="bg-background/50 border-border/50 text-foreground"
-                  placeholder="Enter exercise name"
-                  required
+                  className={`bg-background/50 border-border/50 text-foreground ${errors.name ? 'border-destructive' : ''}`}
+                  placeholder="Wpisz nazwę ćwiczenia"
+                  maxLength={100}
                 />
+                {errors.name && (
+                  <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.name}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">{formData.name.length}/100 znaków</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="difficulty" className="text-foreground">
-                    Difficulty Level *
+                    Poziom trudności <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.difficulty_level}
                     onValueChange={(value) =>
                       setFormData((prev) => ({ ...prev, difficulty_level: value }))
                     }
-                    required
                   >
-                    <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
-                      <SelectValue placeholder="Select difficulty" />
+                    <SelectTrigger className={`bg-background/50 border-border/50 text-foreground ${errors.difficulty_level ? 'border-destructive' : ''}`}>
+                      <SelectValue placeholder="Wybierz poziom" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="beginner">{getDifficultyLabel("beginner")}</SelectItem>
@@ -443,32 +513,41 @@ const EditExercise = () => {
                       <SelectItem value="advanced">{getDifficultyLabel("advanced")}</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.difficulty_level && (
+                    <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.difficulty_level}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="category" className="text-foreground">
-                    Category *
+                    Kategoria <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.category}
                     onValueChange={(value) =>
                       setFormData((prev) => ({ ...prev, category: value }))
                     }
-                    required
                   >
-                    <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
-                      <SelectValue placeholder="Select category" />
+                    <SelectTrigger className={`bg-background/50 border-border/50 text-foreground ${errors.category ? 'border-destructive' : ''}`}>
+                      <SelectValue placeholder="Wybierz kategorię" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="silks">Silks</SelectItem>
-                      <SelectItem value="hoop">Hoop</SelectItem>
-                      <SelectItem value="pole">Pole</SelectItem>
-                      <SelectItem value="hammock">Hammock</SelectItem>
-                      <SelectItem value="core">Core</SelectItem>
-                      <SelectItem value="warm_up">Warm Up</SelectItem>
-                      <SelectItem value="stretching">Stretching</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  {errors.category && (
+                    <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.category}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -476,7 +555,7 @@ const EditExercise = () => {
               {formData.category === "core" && (
                 <div>
                   <Label htmlFor="hold_time" className="text-foreground">
-                    Default Hold Time (seconds)
+                    Domyślny czas trzymania (sekundy)
                   </Label>
                   <Input
                     id="hold_time"
@@ -490,27 +569,26 @@ const EditExercise = () => {
                       }))
                     }
                     className="bg-background/50 border-border/50 text-foreground"
-                    placeholder="Enter hold time in seconds (e.g., 30)"
+                    placeholder="Wpisz czas w sekundach (np. 30)"
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    How long should this exercise be held? (0 = completion mode)
+                    Jak długo ćwiczenie powinno być trzymane? (0 = tryb zaliczenia)
                   </p>
                 </div>
               )}
 
               <div>
                 <Label htmlFor="type" className="text-foreground">
-                  Type *
+                  Typ <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, type: value }))
                   }
-                  required
                 >
-                  <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
-                    <SelectValue placeholder="Select type" />
+                  <SelectTrigger className={`bg-background/50 border-border/50 text-foreground ${errors.type ? 'border-destructive' : ''}`}>
+                    <SelectValue placeholder="Wybierz typ" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="single_figure">{getFigureTypeLabel("single_figure")}</SelectItem>
@@ -522,25 +600,41 @@ const EditExercise = () => {
                     )}
                   </SelectContent>
                 </Select>
+                {errors.type && (
+                  <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.type}
+                  </p>
+                )}
               </div>
 
-              {!isTrainer && (
+              {/* Sport Category - optional */}
+              {sportCategories.length > 0 && (
                 <div>
-                  <Label htmlFor="premium" className="text-foreground">
-                    Access Level
+                  <Label htmlFor="sport_category" className="text-foreground">
+                    Sport (opcjonalnie)
                   </Label>
-                  <div className="flex items-center space-x-3 mt-2">
-                    <Switch
-                      id="premium"
-                      checked={formData.premium}
-                      onCheckedChange={(checked) =>
-                        setFormData((prev) => ({ ...prev, premium: checked }))
-                      }
-                    />
-                    <Label htmlFor="premium" className="text-foreground cursor-pointer">
-                      {formData.premium ? "Premium" : "Free"}
-                    </Label>
-                  </div>
+                  <Select
+                    value={formData.sport_category_id}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, sport_category_id: value === "none" ? "" : value }))
+                    }
+                  >
+                    <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
+                      <SelectValue placeholder="Wybierz sport" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Brak</SelectItem>
+                      {sportCategories.map((sport) => (
+                        <SelectItem key={sport.id} value={sport.id}>
+                          {sport.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Przypisz ćwiczenie do konkretnego sportu
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -550,12 +644,13 @@ const EditExercise = () => {
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-foreground">Media</CardTitle>
+              <CardDescription>Dodaj zdjęcie, wideo lub audio</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="image-upload" className="text-foreground">
-                    Exercise Image *
+                    Zdjęcie ćwiczenia <span className="text-destructive">*</span>
                   </Label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -573,30 +668,36 @@ const EditExercise = () => {
                         className="border-border/50 hover:bg-accent/50"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        Upload Image
+                        Wgraj zdjęcie
                       </Button>
                       {imageFile && (
-                        <span className="text-sm text-muted-foreground">{imageFile.name}</span>
+                        <span className="text-sm text-muted-foreground truncate max-w-32">{imageFile.name}</span>
                       )}
                     </div>
-                    {(formData.image_url || imageFile) && (
-                      <div className="text-sm text-green-600">
-                        {imageFile ? "New image selected" : "Image uploaded"}
+                    {/* Image Preview */}
+                    {(imagePreview || formData.image_url) && (
+                      <div className="relative">
+                        <img
+                          src={imagePreview || formData.image_url}
+                          alt="Podgląd ćwiczenia"
+                          className="w-32 h-32 object-cover rounded-lg border border-border/50"
+                        />
+                        {imagePreview && (
+                          <Badge className="absolute -top-2 -right-2 bg-green-500">Nowe</Badge>
+                        )}
                       </div>
                     )}
-                    {formData.image_url && !imageFile && (
-                      <img
-                        src={formData.image_url}
-                        alt="Current exercise image"
-                        className="w-32 h-32 object-cover rounded-lg border border-border/50"
-                      />
+                    {!imagePreview && !formData.image_url && (
+                      <div className="w-32 h-32 rounded-lg border border-dashed border-border/50 flex items-center justify-center bg-muted/20">
+                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <div>
                   <Label htmlFor="video-upload" className="text-foreground">
-                    Exercise Video (Optional)
+                    Wideo ćwiczenia (opcjonalnie)
                   </Label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -614,15 +715,16 @@ const EditExercise = () => {
                         className="border-border/50 hover:bg-accent/50"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        Upload Video
+                        Wgraj wideo
                       </Button>
                       {videoFile && (
-                        <span className="text-sm text-muted-foreground">{videoFile.name}</span>
+                        <span className="text-sm text-muted-foreground truncate max-w-32">{videoFile.name}</span>
                       )}
                     </div>
                     {(formData.video_url || videoFile) && (
-                      <div className="text-sm text-green-600">
-                        {videoFile ? "New video selected" : "Video uploaded"}
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <Video className="w-4 h-4" />
+                        {videoFile ? "Nowe wideo wybrane" : "Wideo wgrane"}
                       </div>
                     )}
                   </div>
@@ -631,7 +733,7 @@ const EditExercise = () => {
                 {/* Audio Upload */}
                 <div>
                   <Label htmlFor="audio-upload" className="text-foreground">
-                    Audio Instructions (Optional)
+                    Instrukcje audio (opcjonalnie)
                   </Label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -649,15 +751,15 @@ const EditExercise = () => {
                         className="border-border/50 hover:bg-accent/50"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        Upload Audio
+                        Wgraj audio
                       </Button>
                       {audioFile && (
-                        <span className="text-sm text-muted-foreground">{audioFile.name}</span>
+                        <span className="text-sm text-muted-foreground truncate max-w-32">{audioFile.name}</span>
                       )}
                     </div>
                     {(formData.audio_url || audioFile) && (
                       <div className="text-sm text-green-600">
-                        {audioFile ? "New audio selected" : "Audio uploaded"}
+                        {audioFile ? "Nowe audio wybrane" : "Audio wgrane"}
                       </div>
                     )}
                   </div>
@@ -670,12 +772,13 @@ const EditExercise = () => {
           {(formData.video_url || videoFile) && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-foreground">Video Display Settings</CardTitle>
+                <CardTitle className="text-foreground">Ustawienia wideo</CardTitle>
+                <CardDescription>Skonfiguruj wyświetlanie wideo</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="play_video" className="text-foreground">
-                    Auto-play video
+                    Automatyczne odtwarzanie wideo
                   </Label>
                   <Switch
                     id="play_video"
@@ -688,7 +791,7 @@ const EditExercise = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="video_position" className="text-foreground">
-                    Video Crop Position
+                    Pozycja kadrowania wideo
                   </Label>
                   <Select
                     value={formData.video_position}
@@ -697,156 +800,160 @@ const EditExercise = () => {
                     }
                   >
                     <SelectTrigger id="video_position" className="bg-background/50 border-border/50 text-foreground">
-                      <SelectValue placeholder="Select position" />
+                      <SelectValue placeholder="Wybierz pozycję" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="top">Top</SelectItem>
-                      <SelectItem value="bottom">Bottom</SelectItem>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
+                      <SelectItem value="center">Środek</SelectItem>
+                      <SelectItem value="top">Góra</SelectItem>
+                      <SelectItem value="bottom">Dół</SelectItem>
+                      <SelectItem value="left">Lewo</SelectItem>
+                      <SelectItem value="right">Prawo</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-muted-foreground">
-                    Specifies which part of the video is visible when cropped to square
+                    Określa, która część wideo jest widoczna przy kadrowaniu do kwadratu
                   </p>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Content Details */}
-          {!isTrainer && (
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-foreground">Content Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="description" className="text-foreground">
-                    Description (Optional)
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    className="bg-background/50 border-border/50 text-foreground"
-                    placeholder="Brief description of the exercise"
-                    rows={3}
-                  />
-                </div>
+          {/* Content Details - visible for all users */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-foreground">Szczegóły treści</CardTitle>
+              <CardDescription>Dodaj opis, instrukcje i tagi</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="description" className="text-foreground">
+                  Opis (opcjonalnie)
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  className={`bg-background/50 border-border/50 text-foreground ${errors.description ? 'border-destructive' : ''}`}
+                  placeholder="Krótki opis ćwiczenia"
+                  rows={3}
+                  maxLength={1000}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{formData.description.length}/1000 znaków</p>
+              </div>
 
-                <div>
-                  <Label htmlFor="instructions" className="text-foreground">
-                    Instructions (Optional)
-                  </Label>
-                  <Textarea
-                    id="instructions"
-                    value={formData.instructions}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        instructions: e.target.value,
-                      }))
-                    }
-                    className="bg-background/50 border-border/50 text-foreground"
-                    placeholder="Step-by-step instructions"
-                    rows={4}
-                  />
-                </div>
+              <div>
+                <Label htmlFor="instructions" className="text-foreground">
+                  Instrukcje wykonania (opcjonalnie)
+                </Label>
+                <Textarea
+                  id="instructions"
+                  value={formData.instructions}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      instructions: e.target.value,
+                    }))
+                  }
+                  className="bg-background/50 border-border/50 text-foreground"
+                  placeholder="Krok po kroku instrukcje jak wykonać ćwiczenie"
+                  rows={4}
+                  maxLength={2000}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{formData.instructions.length}/2000 znaków</p>
+              </div>
 
-                <div>
-                  <Label htmlFor="tags" className="text-foreground">
-                    Tags (Optional)
-                  </Label>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input
-                        id="tags"
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="bg-background/50 border-border/50 text-foreground"
-                        placeholder="Add a tag and press Enter"
-                      />
-                      <Button
-                        type="button"
-                        onClick={addTag}
-                        variant="outline"
-                        className="border-border/50 hover:bg-accent/50"
+              <div>
+                <Label htmlFor="tags" className="text-foreground">
+                  Tagi (opcjonalnie)
+                </Label>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="bg-background/50 border-border/50 text-foreground"
+                      placeholder="Dodaj tag i naciśnij Enter"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addTag}
+                      variant="outline"
+                      className="border-border/50 hover:bg-accent/50"
+                    >
+                      Dodaj
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-destructive/20"
+                        onClick={() => removeTag(tag)}
                       >
-                        Add
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.tags.map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-destructive/20"
-                          onClick={() => removeTag(tag)}
-                        >
-                          {tag} ✕
-                        </Badge>
-                      ))}
-                    </div>
+                        {tag} ✕
+                      </Badge>
+                    ))}
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <Label htmlFor="synonyms" className="text-foreground">
-                    Synonyms (Optional)
-                  </Label>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Alternative names for this exercise
-                  </p>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input
-                        id="synonyms"
-                        value={synonymInput}
-                        onChange={(e) => setSynonymInput(e.target.value)}
-                        onKeyPress={handleSynonymKeyPress}
-                        className="bg-background/50 border-border/50 text-foreground"
-                        placeholder="Add a synonym and press Enter"
-                      />
-                      <Button
-                        type="button"
-                        onClick={addSynonym}
+              <div>
+                <Label htmlFor="synonyms" className="text-foreground">
+                  Synonimy (opcjonalnie)
+                </Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Alternatywne nazwy tego ćwiczenia
+                </p>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      id="synonyms"
+                      value={synonymInput}
+                      onChange={(e) => setSynonymInput(e.target.value)}
+                      onKeyPress={handleSynonymKeyPress}
+                      className="bg-background/50 border-border/50 text-foreground"
+                      placeholder="Dodaj synonim i naciśnij Enter"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addSynonym}
+                      variant="outline"
+                      className="border-border/50 hover:bg-accent/50"
+                    >
+                      Dodaj
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.synonyms.map((synonym, index) => (
+                      <Badge
+                        key={index}
                         variant="outline"
-                        className="border-border/50 hover:bg-accent/50"
+                        className="cursor-pointer hover:bg-destructive/20"
+                        onClick={() => removeSynonym(synonym)}
                       >
-                        Add
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.synonyms.map((synonym, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="cursor-pointer hover:bg-destructive/20"
-                          onClick={() => removeSynonym(synonym)}
-                        >
-                          {synonym} ✕
-                        </Badge>
-                      ))}
-                    </div>
+                        {synonym} ✕
+                      </Badge>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Foundational Exercises - only in edit mode */}
           {!isCreateMode && exercise && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-foreground">Foundational Skills</CardTitle>
+                <CardTitle className="text-foreground">Ćwiczenia podstawowe</CardTitle>
+                <CardDescription>Jakie ćwiczenia należy opanować przed tym?</CardDescription>
               </CardHeader>
               <CardContent>
                 <PrerequisiteExercisesManager figureId={exercise.id} />
@@ -858,10 +965,22 @@ const EditExercise = () => {
           {!isCreateMode && exercise && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-foreground">Similar Exercises</CardTitle>
+                <CardTitle className="text-foreground">Podobne ćwiczenia</CardTitle>
+                <CardDescription>Powiązane ćwiczenia o podobnej tematyce</CardDescription>
               </CardHeader>
               <CardContent>
                 <SimilarExercisesManager figureId={exercise.id} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Info for create mode about related exercises */}
+          {isCreateMode && (
+            <Card className="border-border/30 bg-muted/20">
+              <CardContent className="py-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  💡 Po zapisaniu ćwiczenia będziesz mógł dodać ćwiczenia podstawowe i podobne
+                </p>
               </CardContent>
             </Card>
           )}
@@ -872,10 +991,10 @@ const EditExercise = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(isCreateMode ? "/library" : `/exercise/${exerciseId}`)}
+                onClick={() => navigate(isCreateMode ? "/trainer/my-exercises" : `/exercise/${exerciseId}`)}
                 className="flex-1"
               >
-                Cancel
+                Anuluj
               </Button>
               <Button
                 onClick={handleSubmit}
@@ -885,12 +1004,12 @@ const EditExercise = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Saving...
+                    Zapisywanie...
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    Zapisz
                   </>
                 )}
               </Button>
