@@ -33,6 +33,7 @@ import WorkoutTimer from "@/pages/WorkoutTimer";
 import UserManagement from "@/pages/UserManagement";
 import MyJourney from "@/pages/MyJourney";
 import EditChallenge from "@/pages/EditChallenge";
+import CreateChallenge from "@/pages/CreateChallenge";
 
 import ChallengeDayTimer from "@/pages/ChallengeDayTimer";
 import ChallengePreview from "@/pages/ChallengePreview";
@@ -362,6 +363,14 @@ const AppRoutes = () => {
            </ProtectedRoute>
          }
        />
+      <Route
+        path="/challenges/create"
+        element={
+          <ProtectedRoute>
+            <CreateChallenge />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/challenges/:challengeId/edit"
         element={

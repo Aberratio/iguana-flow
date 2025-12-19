@@ -53,6 +53,8 @@ import { cn } from "@/lib/utils";
 import ExerciseManagement from "@/components/ExerciseManagement";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { BulkDayCreator } from "@/components/BulkDayCreator";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useDictionary } from "@/contexts/DictionaryContext";
 
 interface Achievement {
   id: string;
@@ -174,6 +176,8 @@ const EditChallenge = () => {
   }>({});
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isAdmin, isTrainer } = useUserRole();
+  const { difficultyLevels, getDifficultyLabel } = useDictionary();
 
   useEffect(() => {
     if (challengeId) {
@@ -185,19 +189,19 @@ const EditChallenge = () => {
   // Validate user access after challenge is loaded
   useEffect(() => {
     if (challenge && user) {
-      const canEdit = user.role === 'admin' || 
-                     (user.role === 'trainer' && user.id === challenge.created_by);
+      const canEdit = isAdmin || 
+                     (isTrainer && user.id === challenge.created_by);
       
       if (!canEdit) {
         toast({
-          title: "Access denied",
-          description: "You don't have permission to edit this challenge.",
+          title: "Brak dostępu",
+          description: "Nie masz uprawnień do edycji tego wyzwania.",
           variant: "destructive",
         });
-        navigate("/challenges");
+        navigate("/trainer/my-challenges");
       }
     }
-  }, [challenge, user]);
+  }, [challenge, user, isAdmin, isTrainer]);
 
 
   const fetchChallengeData = async () => {
@@ -296,8 +300,8 @@ const EditChallenge = () => {
       console.error("Error details:", JSON.stringify(error, null, 2));
       
       toast({
-        title: "Error loading challenge",
-        description: error instanceof Error ? error.message : "Failed to load challenge data. Check console for details.",
+        title: "Błąd ładowania wyzwania",
+        description: error instanceof Error ? error.message : "Nie udało się załadować danych. Sprawdź konsolę.",
         variant: "destructive",
       });
       
@@ -352,18 +356,18 @@ const EditChallenge = () => {
     const newErrors: typeof errors = {};
     
     if (!title.trim()) {
-      newErrors.title = "Title is required";
+      newErrors.title = "Tytuł jest wymagany";
     } else if (title.length > 100) {
-      newErrors.title = "Title is too long (max 100 characters)";
+      newErrors.title = "Tytuł jest za długi (max 100 znaków)";
     }
     
     if (description && description.length > 1000) {
-      newErrors.description = "Description is too long (max 1000 characters)";
+      newErrors.description = "Opis jest za długi (max 1000 znaków)";
     }
     
     // Training days required ONLY when publishing
     if (isPublishing && trainingDays.length === 0) {
-      newErrors.trainingDays = "At least one training day is required for publishing";
+      newErrors.trainingDays = "Do publikacji wymagany jest co najmniej jeden dzień treningowy";
     }
     
     setErrors(newErrors);
@@ -376,8 +380,8 @@ const EditChallenge = () => {
     // Validate form - pass isPublished flag to check training days only when publishing
     if (!validateForm(isPublished)) {
       toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form.",
+        title: "Błąd walidacji",
+        description: "Popraw błędy w formularzu.",
         variant: "destructive",
       });
       return;
@@ -390,20 +394,20 @@ const EditChallenge = () => {
       // Step 1: Upload image if needed
       let uploadedImageUrl = imageUrl;
       if (imageFile) {
-        currentStep = "Uploading image";
-        setSaveProgress("Uploading challenge image...");
+        currentStep = "Przesyłanie zdjęcia";
+        setSaveProgress("Przesyłanie zdjęcia wyzwania...");
         const uploadedUrl = await uploadImage(imageFile);
         if (uploadedUrl) {
           uploadedImageUrl = uploadedUrl;
           setImageUrl(uploadedUrl);
         } else {
-          throw new Error("Failed to upload image");
+          throw new Error("Nie udało się przesłać zdjęcia");
         }
       }
 
       // Step 2: Update challenge details
-      currentStep = "Updating challenge details";
-      setSaveProgress("Updating challenge details...");
+      currentStep = "Aktualizacja danych";
+      setSaveProgress("Aktualizacja szczegółów wyzwania...");
       const { error: updateError } = await supabase
         .from("challenges")
         .update({
@@ -423,27 +427,27 @@ const EditChallenge = () => {
         .eq("id", challengeId);
 
       if (updateError) {
-        console.error("Update error details:", updateError);
-        throw new Error(`Database update failed: ${updateError.message}`);
+        console.error("Błąd aktualizacji:", updateError);
+        throw new Error(`Błąd bazy danych: ${updateError.message}`);
       }
 
       // Step 3: Save achievements
-      currentStep = "Saving achievements";
-      setSaveProgress("Saving achievements...");
+      currentStep = "Zapisywanie osiągnięć";
+      setSaveProgress("Zapisywanie osiągnięć...");
       await saveAchievements();
 
       // Step 4: Save training days
-      currentStep = "Saving training days";
-      setSaveProgress(`Saving ${trainingDays.length} training days...`);
+      currentStep = "Zapisywanie dni treningowych";
+      setSaveProgress(`Zapisywanie ${trainingDays.length} dni treningowych...`);
       await saveTrainingDays();
 
       setSaveProgress(null);
       toast({
-        title: "Success",
-        description: `Challenge "${title}" updated successfully.`,
+        title: "Zapisano",
+        description: `Wyzwanie "${title}" zostało zaktualizowane.`,
       });
 
-      navigate("/challenges");
+      navigate("/trainer/my-challenges");
     } catch (error: any) {
       console.error("Error updating challenge:", {
         step: currentStep,
@@ -459,8 +463,8 @@ const EditChallenge = () => {
       
       setSaveProgress(null);
       toast({
-        title: `Error at step: ${currentStep}`,
-        description: error.message || "Failed to update challenge. Check console for details.",
+        title: `Błąd: ${currentStep}`,
+        description: error.message || "Nie udało się zaktualizować wyzwania. Sprawdź konsolę.",
         variant: "destructive",
       });
     } finally {
@@ -477,7 +481,7 @@ const EditChallenge = () => {
       .delete()
       .eq("challenge_id", challengeId);
 
-    if (deleteError) throw new Error(`Failed to delete old achievements: ${deleteError.message}`);
+    if (deleteError) throw new Error(`Nie udało się usunąć starych osiągnięć: ${deleteError.message}`);
 
     // Insert new achievements
     if (selectedAchievements.length > 0) {
@@ -490,7 +494,7 @@ const EditChallenge = () => {
         .from("challenge_achievements")
         .insert(achievementData);
 
-      if (insertError) throw new Error(`Failed to insert achievements: ${insertError.message}`);
+      if (insertError) throw new Error(`Nie udało się zapisać osiągnięć: ${insertError.message}`);
     }
   };
 
@@ -504,7 +508,7 @@ const EditChallenge = () => {
       .eq("challenge_id", challengeId)
       .order("day_number");
 
-    if (fetchError) throw new Error(`Failed to fetch existing days: ${fetchError.message}`);
+    if (fetchError) throw new Error(`Nie udało się pobrać istniejących dni: ${fetchError.message}`);
 
     const existingDaysByNumber = new Map<number, string>();
     existingDays?.forEach(d => existingDaysByNumber.set(d.day_number, d.id));
@@ -537,8 +541,8 @@ const EditChallenge = () => {
           .eq("id", existingDayId);
 
         if (updateError) {
-          console.error(`Failed to update training day ${dayNumber}:`, updateError);
-          throw new Error(`Failed to update day ${dayNumber}: ${updateError.message}`);
+          console.error(`Błąd aktualizacji dnia treningowego ${dayNumber}:`, updateError);
+          throw new Error(`Nie udało się zaktualizować dnia ${dayNumber}: ${updateError.message}`);
         }
         
         trainingDayId = existingDayId;
@@ -564,8 +568,8 @@ const EditChallenge = () => {
           .single();
 
         if (dayError) {
-          console.error(`Failed to insert training day ${dayNumber}:`, dayError);
-          throw new Error(`Failed to insert day ${dayNumber}: ${dayError.message}`);
+          console.error(`Błąd dodawania dnia treningowego ${dayNumber}:`, dayError);
+          throw new Error(`Nie udało się dodać dnia ${dayNumber}: ${dayError.message}`);
         }
         
         trainingDayId = trainingDayData.id;
@@ -590,7 +594,7 @@ const EditChallenge = () => {
           .from("training_day_exercises")
           .insert(exerciseData);
 
-        if (exerciseError) throw new Error(`Failed to insert exercises for day ${dayNumber}: ${exerciseError.message}`);
+        if (exerciseError) throw new Error(`Nie udało się zapisać ćwiczeń dla dnia ${dayNumber}: ${exerciseError.message}`);
       }
     }
 
@@ -605,14 +609,13 @@ const EditChallenge = () => {
           .eq("training_day_id", dayId);
 
         if (countError) {
-          console.error(`Failed to check progress for day ${dayNumber}:`, countError);
+          console.error(`Błąd sprawdzania progresu dla dnia ${dayNumber}:`, countError);
         }
 
-        if (count && count > 0) {
           // Day has user progress - warn admin but DON'T delete
           toast({
-            title: "Warning",
-            description: `Day ${dayNumber} has ${count} user progress records and was not deleted. User progress would be lost.`,
+            title: "Uwaga",
+            description: `Dzień ${dayNumber} ma ${count} rekordów progresu użytkowników i nie został usunięty. Usunięcie skutkowałoby utratą danych uczestników.`,
             variant: "destructive",
           });
         } else {
@@ -623,7 +626,7 @@ const EditChallenge = () => {
             .eq("id", dayId);
 
           if (deleteError) {
-            console.error(`Failed to delete orphaned day ${dayNumber}:`, deleteError);
+            console.error(`Błąd usuwania dnia ${dayNumber}:`, deleteError);
           }
         }
       }
@@ -660,16 +663,16 @@ const EditChallenge = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Challenge deleted successfully.",
+        title: "Usunięto",
+        description: "Wyzwanie zostało usunięte.",
       });
 
-      navigate("/challenges");
+      navigate("/trainer/my-challenges");
     } catch (error) {
-      console.error("Error deleting challenge:", error);
+      console.error("Błąd usuwania wyzwania:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete challenge.",
+        title: "Błąd",
+        description: "Nie udało się usunąć wyzwania.",
         variant: "destructive",
       });
     } finally {
@@ -690,7 +693,7 @@ const EditChallenge = () => {
 
     const newDay = {
       date: nextDate,
-      title: `Day ${trainingDays.length + 1}`,
+      title: `Dzień ${trainingDays.length + 1}`,
       description: "",
       exercises: [],
       isRestDay: false,
@@ -767,7 +770,7 @@ const EditChallenge = () => {
   if (isLoadingData) {
     return (
       <div className="min-h-screen p-6 flex items-center justify-center">
-        <div className="text-white">Loading challenge...</div>
+        <div className="text-foreground">Ładowanie wyzwania...</div>
       </div>
     );
   }
@@ -776,7 +779,7 @@ const EditChallenge = () => {
     return (
       <div className="min-h-screen p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-white text-xl mb-4">Challenge not found</h2>
+          <h2 className="text-foreground text-xl mb-4">Nie znaleziono wyzwania</h2>
         </div>
       </div>
     );
@@ -788,9 +791,9 @@ const EditChallenge = () => {
         {/* Header */}
         <div className="mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">Edit Challenge</h1>
+            <h1 className="text-3xl font-bold">Edycja wyzwania</h1>
             <p className="text-muted-foreground">
-              Make changes to your challenge
+              Wprowadź zmiany w swoim wyzwaniu
             </p>
           </div>
         </div>
@@ -798,7 +801,7 @@ const EditChallenge = () => {
         <div className="bg-black/50 backdrop-blur-lg rounded-lg border border-white/10 p-3 sm:p-6">
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Challenge Title *</Label>
+              <Label htmlFor="title">Tytuł wyzwania *</Label>
               <Input
                 id="title"
                 value={title}
@@ -808,17 +811,17 @@ const EditChallenge = () => {
                     setErrors(prev => ({ ...prev, title: undefined }));
                   }
                 }}
-                placeholder="Enter challenge title"
+                placeholder="Wprowadź tytuł wyzwania"
                 maxLength={100}
-                className={cn(errors.title && "border-red-500")}
+                className={cn(errors.title && "border-destructive")}
               />
               {errors.title && (
-                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                <p className="text-destructive text-sm mt-1">{errors.title}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Opis</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -828,19 +831,19 @@ const EditChallenge = () => {
                     setErrors(prev => ({ ...prev, description: undefined }));
                   }
                 }}
-                placeholder="Describe your challenge..."
+                placeholder="Opisz swoje wyzwanie..."
                 rows={4}
                 maxLength={1000}
-                className={cn(errors.description && "border-red-500")}
+                className={cn(errors.description && "border-destructive")}
               />
               {errors.description && (
-                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                <p className="text-destructive text-sm mt-1">{errors.description}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="level" className="text-white">
-                Level
+              <Label htmlFor="level">
+                Poziom
               </Label>
               <Input
                 id="level"
@@ -848,60 +851,54 @@ const EditChallenge = () => {
                 min="1"
                 value={level}
                 onChange={(e) => setLevel(parseInt(e.target.value) || 1)}
-                className="bg-black/20 border-white/10 text-white placeholder-white/50"
-                placeholder="Enter challenge level"
+                placeholder="Wprowadź poziom wyzwania"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="difficulty">Difficulty Level</Label>
+              <Label htmlFor="difficulty">Poziom trudności</Label>
               <Select
                 value={difficultyLevel}
                 onValueChange={setDifficultyLevel}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select difficulty level" />
+                  <SelectValue placeholder="Wybierz poziom trudności" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="beginner">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      Beginner
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="intermediate">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                      Intermediate
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="advanced">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                      Advanced
-                    </div>
-                  </SelectItem>
+                  {difficultyLevels.map((lvl) => (
+                    <SelectItem key={lvl.key} value={lvl.key}>
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full",
+                          lvl.key === "beginner" && "bg-green-500",
+                          lvl.key === "intermediate" && "bg-yellow-500",
+                          lvl.key === "advanced" && "bg-red-500"
+                        )} />
+                        {lvl.name_pl}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">Challenge Type</Label>
+              <Label htmlFor="type">Typ wyzwania</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select challenge type" />
+                  <SelectValue placeholder="Wybierz typ wyzwania" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="manual">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      Manual
+                      Manualny
                     </div>
                   </SelectItem>
                   <SelectItem value="timer">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                      Timer
+                      Czasowy
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -909,7 +906,7 @@ const EditChallenge = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image">Challenge Image</Label>
+              <Label htmlFor="image">Zdjęcie wyzwania</Label>
               <div className="space-y-2">
                 <Input
                   id="image"
@@ -925,10 +922,10 @@ const EditChallenge = () => {
                 />
                 <div className="text-xs text-muted-foreground">
                   {imageFile
-                    ? `Selected: ${imageFile.name}`
+                    ? `Wybrano: ${imageFile.name}`
                     : imageUrl
-                    ? "Current image uploaded"
-                    : "No file selected"}
+                    ? "Aktualne zdjęcie przesłane"
+                    : "Nie wybrano pliku"}
                 </div>
               </div>
               {imageUrl && (
@@ -1340,8 +1337,8 @@ const EditChallenge = () => {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={deleteChallenge}
-        title="Delete Challenge"
-        description="Are you sure you want to delete this challenge? This action cannot be undone and will remove all associated training days and progress."
+        title="Usuń wyzwanie"
+        description="Czy na pewno chcesz usunąć to wyzwanie? Tej akcji nie można cofnąć. Zostaną usunięte wszystkie dni treningowe i postępy uczestników."
         isLoading={isDeleting}
       />
     </div>
