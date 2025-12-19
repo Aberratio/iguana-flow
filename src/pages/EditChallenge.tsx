@@ -612,6 +612,7 @@ const EditChallenge = () => {
           console.error(`Błąd sprawdzania progresu dla dnia ${dayNumber}:`, countError);
         }
 
+        if (count && count > 0) {
           // Day has user progress - warn admin but DON'T delete
           toast({
             title: "Uwaga",
@@ -939,11 +940,11 @@ const EditChallenge = () => {
               )}
             </div>
 
-            {/* Publishing and Premium Settings */}
+            {/* Status publikacji */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label className="text-lg font-semibold">
-                  Publishing Status
+                  Status publikacji
                 </Label>
                 <div className="flex items-center space-x-3 p-4 border rounded-lg">
                   <Switch
@@ -952,29 +953,27 @@ const EditChallenge = () => {
                   />
                   <div className="flex-1">
                     <div className="font-medium">
-                      {isPublished ? "Published" : "Unpublished"}
+                      {isPublished ? "Opublikowane" : "Szkic"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {isPublished
-                        ? "Challenge is visible to all users"
-                        : "Challenge is only visible to admins"}
+                        ? "Wyzwanie jest widoczne dla wszystkich użytkowników"
+                        : "Wyzwanie jest widoczne tylko dla administratorów"}
                     </div>
                   </div>
                   <Badge variant={isPublished ? "default" : "secondary"}>
-                    {isPublished ? "Published" : "Draft"}
+                    {isPublished ? "Opublikowane" : "Szkic"}
                   </Badge>
                 </div>
               </div>
-
-              {/* Premium section removed - only sport paths are paid */}
             </div>
 
-            {/* Achievements Section */}
+            {/* Sekcja osiągnięć */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-purple-400" />
                 <Label className="text-lg font-semibold">
-                  Challenge Achievements
+                  Osiągnięcia wyzwania
                 </Label>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto border rounded-lg p-4">
@@ -997,7 +996,7 @@ const EditChallenge = () => {
                         <div>
                           <div className="font-medium">{achievement.name}</div>
                           <div className="text-xs text-muted-foreground">
-                            {achievement.points} points
+                            {achievement.points} pkt
                           </div>
                         </div>
                       </div>
@@ -1009,28 +1008,18 @@ const EditChallenge = () => {
 
             {/* Training Days Section */}
             <div className="space-y-6">
-              {trainingDays.length === 0 && (
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                  <p className="text-sm text-yellow-200">
-                    ⚠️ To wyzwanie nie ma jeszcze dni treningowych. Dodaj je przed publikacją.
-                  </p>
-                </div>
-              )}
-
-            {/* Training Days Section */}
-            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                   <div>
                     <Label className="text-lg sm:text-xl font-bold">
-                      Training Days ({trainingDays.length})
+                      Dni treningowe ({trainingDays.length})
                     </Label>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      Design your challenge schedule
+                      Zaprojektuj harmonogram wyzwania
                     </p>
                     {errors.trainingDays && (
-                      <p className="text-red-500 text-sm mt-1">{errors.trainingDays}</p>
+                      <p className="text-destructive text-sm mt-1">{errors.trainingDays}</p>
                     )}
                   </div>
                 </div>
@@ -1047,7 +1036,7 @@ const EditChallenge = () => {
                     className="flex items-center gap-2 bg-primary hover:bg-primary/90 flex-1 sm:flex-initial"
                   >
                     <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-sm">Add Day</span>
+                    <span className="text-sm">Dodaj dzień</span>
                   </Button>
                 </div>
               </div>
@@ -1085,14 +1074,14 @@ const EditChallenge = () => {
                                     )}
                                   </div>
                                   <Badge variant={day.isRestDay ? "secondary" : "default"} className="text-sm px-3 py-1">
-                                    Day {index + 1}/{trainingDays.length}
+                                    Dzień {index + 1}/{trainingDays.length}
                                   </Badge>
                                   <div className="flex-1">
                                     <h3 className="text-lg font-bold">
-                                      {day.title || `Day ${index + 1}`}
+                                      {day.title || `Dzień ${index + 1}`}
                                     </h3>
                                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                      <span>{day.exercises.length} exercise{day.exercises.length !== 1 ? 's' : ''}</span>
+                                      <span>{day.exercises.length} {day.exercises.length === 1 ? 'ćwiczenie' : day.exercises.length < 5 ? 'ćwiczenia' : 'ćwiczeń'}</span>
                                       {/* Progress indicator */}
                                       <div className={cn(
                                         "w-2 h-2 rounded-full",
@@ -1107,7 +1096,7 @@ const EditChallenge = () => {
                                       variant="secondary"
                                       className="text-sm px-3 py-1"
                                     >
-                                      😴 Rest
+                                      😴 Odpoczynek
                                     </Badge>
                                   )}
                                 </div>
@@ -1122,7 +1111,7 @@ const EditChallenge = () => {
                                   className="hover:bg-destructive/20 hover:text-destructive hover:border-destructive/50"
                                 >
                                   <X className="w-4 h-4 mr-2" />
-                                  Remove
+                                  Usuń
                                 </Button>
                               </div>
                           </div>
@@ -1133,10 +1122,10 @@ const EditChallenge = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-3">
                                 <Label className="text-sm font-semibold text-foreground">
-                                  Title
+                                  Tytuł
                                 </Label>
                                 <Input
-                                  placeholder="e.g., Upper Body Focus, Core Strength"
+                                  placeholder="np. Górne partie ciała, Trening core"
                                   value={day.title}
                                   onChange={(e) =>
                                     updateTrainingDay(
@@ -1151,12 +1140,12 @@ const EditChallenge = () => {
 
                               <div className="space-y-3">
                                 <Label className="text-sm font-semibold text-foreground">
-                                  Date
+                                  Data
                                 </Label>
                                 <div className="px-3 py-2 border rounded-md bg-muted h-11 flex items-center">
                                   <Calendar className="mr-3 h-5 w-5" />
                                   <span className="text-sm">
-                                    {day.date ? format(day.date, "MMM dd, yyyy") : "Date will be set automatically"}
+                                    {day.date ? format(day.date, "dd.MM.yyyy") : "Data zostanie ustawiona automatycznie"}
                                   </span>
                                 </div>
                               </div>
@@ -1164,10 +1153,10 @@ const EditChallenge = () => {
 
                             <div className="mt-6 space-y-3">
                               <Label className="text-sm font-semibold text-foreground">
-                                Description
+                                Opis
                               </Label>
                               <Textarea
-                                placeholder="Describe what this training day focuses on..."
+                                placeholder="Opisz na czym skupia się ten dzień treningowy..."
                                 value={day.description}
                                 onChange={(e) =>
                                   updateTrainingDay(
@@ -1184,7 +1173,7 @@ const EditChallenge = () => {
                             <div className="mt-6 flex items-center justify-between p-4 bg-background/30 rounded-lg border border-border/30">
                               <div className="flex items-center gap-4">
                                 <Label className="text-sm font-semibold">
-                                  Day Type:
+                                  Typ dnia:
                                 </Label>
                                 <div className="flex items-center space-x-3">
                                   <Switch
@@ -1199,8 +1188,8 @@ const EditChallenge = () => {
                                   />
                                   <span className="text-sm font-medium">
                                     {day.isRestDay
-                                      ? "Rest Day"
-                                      : "Training Day"}
+                                      ? "Dzień odpoczynku"
+                                      : "Dzień treningowy"}
                                   </span>
                                 </div>
                               </div>
@@ -1209,15 +1198,12 @@ const EditChallenge = () => {
                                   variant="outline"
                                   className="text-sm px-3 py-1"
                                 >
-                                  {day.exercises?.length || 0} exercise
-                                  {(day.exercises?.length || 0) !== 1
-                                    ? "s"
-                                    : ""}
+                                  {day.exercises?.length || 0} {(day.exercises?.length || 0) === 1 ? 'ćwiczenie' : (day.exercises?.length || 0) < 5 ? 'ćwiczenia' : 'ćwiczeń'}
                                 </Badge>
                               )}
                             </div>
 
-                            {/* Day Content */}
+                            {/* Zawartość dnia */}
                             <div className="mt-6">
                               {day.isRestDay ? (
                                 <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border/50 rounded-lg bg-blue-500/5">
@@ -1225,11 +1211,10 @@ const EditChallenge = () => {
                                     <span className="text-3xl">😴</span>
                                   </div>
                                   <h4 className="font-semibold text-lg mb-2">
-                                    Rest & Recovery Day
+                                    Dzień odpoczynku i regeneracji
                                   </h4>
                                   <p className="text-sm">
-                                    No exercises needed - time to let your body
-                                    recover and rebuild!
+                                    Brak ćwiczeń - czas na odpoczynek i regenerację ciała!
                                   </p>
                                 </div>
                               ) : (
@@ -1237,7 +1222,7 @@ const EditChallenge = () => {
                                   <div className="flex items-center gap-3 pb-3 border-b border-border/30">
                                     <CalendarDays className="w-5 h-5 text-primary" />
                                     <h4 className="text-lg font-semibold">
-                                      Exercises for this day
+                                      Ćwiczenia na ten dzień
                                     </h4>
                                   </div>
                                   <ExerciseManagement
@@ -1267,10 +1252,10 @@ const EditChallenge = () => {
                   <div className="text-center py-16 text-muted-foreground border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
                     <CalendarDays className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">
-                      No training days added yet
+                      Brak dni treningowych
                     </h3>
                     <p className="text-sm mb-6">
-                      Start building your challenge by adding training sessions
+                      Zacznij tworzyć wyzwanie dodając dni treningowe
                     </p>
                     <Button
                       type="button"
@@ -1278,7 +1263,7 @@ const EditChallenge = () => {
                       className="bg-primary hover:bg-primary/90"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Your First Training Day
+                      Dodaj pierwszy dzień
                     </Button>
                   </div>
                 )}
@@ -1287,41 +1272,39 @@ const EditChallenge = () => {
           </div>
         </div>
 
-
-            {/* Footer Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-white/10 p-3 sm:p-6 mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate("/challenges")}
-                disabled={isLoading}
-                className="w-full sm:w-auto order-3 sm:order-1"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={saveChallenge}
-                disabled={isLoading}
-                className="w-full sm:flex-1 order-1 sm:order-2"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {isLoading ? (saveProgress || "Saving...") : "Save Changes"}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setShowDeleteModal(true)}
-                disabled={isLoading}
-                className="w-full sm:w-auto order-2 sm:order-3"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
+        {/* Footer Actions */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-3 sm:p-6 mt-6 rounded-lg">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/trainer/my-challenges")}
+            disabled={isLoading}
+            className="w-full sm:w-auto order-3 sm:order-1"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Anuluj
+          </Button>
+          <Button
+            type="button"
+            onClick={saveChallenge}
+            disabled={isLoading}
+            className="w-full sm:flex-1 order-1 sm:order-2"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {isLoading ? (saveProgress || "Zapisywanie...") : "Zapisz zmiany"}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => setShowDeleteModal(true)}
+            disabled={isLoading}
+            className="w-full sm:w-auto order-2 sm:order-3"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Usuń
+          </Button>
         </div>
+      </div>
 
       {/* Save Progress Indicator */}
       {saveProgress && (
