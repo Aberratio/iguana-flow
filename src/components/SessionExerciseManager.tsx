@@ -152,8 +152,8 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
     onExercisesChange(updatedExercises);
 
     toast({
-      title: "Exercise Added",
-      description: `${exercise.name} has been added to ${currentCategory}.`,
+      title: "Dodano ćwiczenie",
+      description: `${exercise.name} zostało dodane do kategorii ${getCategoryLabel(currentCategory)}.`,
     });
   };
 
@@ -170,8 +170,8 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
     onExercisesChange(updatedExercises);
 
     toast({
-      title: "Exercise Removed",
-      description: "Exercise has been removed from the session.",
+      title: "Usunięto ćwiczenie",
+      description: "Ćwiczenie zostało usunięte z treningu.",
     });
   };
 
@@ -192,8 +192,8 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
     setEditingIndex(null);
 
     toast({
-      title: "Exercise Updated",
-      description: "Exercise details have been updated.",
+      title: "Zaktualizowano ćwiczenie",
+      description: "Szczegóły ćwiczenia zostały zapisane.",
     });
   };
 
@@ -231,11 +231,11 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
         <div className="text-center py-8 border-2 border-dashed border-white/10 rounded-lg">
           {getCategoryIcon(category)}
           <h3 className="text-lg font-semibold text-white mb-2 mt-4">
-            No {getCategoryLabel(category)} exercises
+            Brak ćwiczeń {getCategoryLabel(category)}
           </h3>
           <p className="text-muted-foreground mb-4">
-            Add exercises to build your{" "}
-            {getCategoryLabel(category).toLowerCase()} routine
+            Dodaj ćwiczenia, aby zbudować swoją rutynę{" "}
+            {getCategoryLabel(category).toLowerCase()}
           </p>
           <Button
             onClick={() => {
@@ -246,7 +246,7 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
             className="border-white/20 text-white hover:bg-white/10"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add {getCategoryLabel(category)} Exercise
+            Dodaj ćwiczenie {getCategoryLabel(category)}
           </Button>
         </div>
       );
@@ -281,7 +281,7 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
                         <div className="grid grid-cols-4 gap-2">
                           <div>
                             <Label className="text-white/70 text-xs">
-                              Sets
+                              Serie
                             </Label>
                             <Input
                               type="number"
@@ -297,7 +297,7 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
                           </div>
                           <div>
                             <Label className="text-white/70 text-xs">
-                              Reps
+                              Powtórzenia
                             </Label>
                             <Input
                               type="number"
@@ -313,7 +313,7 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
                           </div>
                           <div>
                             <Label className="text-white/70 text-xs">
-                              Hold (s)
+                              Przytrzymanie (s)
                             </Label>
                             <Input
                               type="number"
@@ -369,8 +369,8 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
                             )}
                             <Label className="text-white/70 text-sm">
                               {(exercise.completion_mode || "time") === "time"
-                                ? "Time-based"
-                                : "Completion-based"}
+                                ? "Na czas"
+                                : "Na zaliczenie"}
                             </Label>
                           </div>
                           <Switch
@@ -396,8 +396,8 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
                           <span className="text-xs text-white/50">
                             {(exercise.completion_mode || "time") ===
                             "completion"
-                              ? 'Click "Done" to complete'
-                              : "Timer-based completion"}
+                              ? 'Kliknij "Gotowe" aby ukończyć'
+                              : "Ukończenie na podstawie timera"}
                           </span>
                         </div>
                       </div>
@@ -405,24 +405,24 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <RotateCcw className="w-3 h-3" />
-                          <span>{exercise.sets} sets</span>
+                          <span>{exercise.sets} serii</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Target className="w-3 h-3" />
-                          <span>{exercise.reps} reps</span>
+                          <span>{exercise.reps} powt.</span>
                         </div>
                         {(exercise.completion_mode || "time") ===
                         "completion" ? (
                           <div className="flex items-center gap-1">
                             <CheckCircle className="w-3 h-3 text-green-400" />
                             <span className="text-green-400">
-                              Completion mode
+                              Na zaliczenie
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            <span>{exercise.hold_time_seconds}s hold</span>
+                            <span>{exercise.hold_time_seconds}s przytrzymanie</span>
                           </div>
                         )}
                       </div>
@@ -460,7 +460,7 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
     return (
       <Card className="glass-effect border-white/10">
         <CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">Loading exercises...</p>
+          <p className="text-muted-foreground">Ładowanie ćwiczeń...</p>
         </CardContent>
       </Card>
     );
@@ -478,7 +478,7 @@ export const SessionExerciseManager: React.FC<SessionExerciseManagerProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="text-white flex items-center">
               <Target className="w-5 h-5 mr-2 text-primary" />
-              Session Exercises ({totalExercises})
+              Ćwiczenia w treningu ({totalExercises})
             </CardTitle>
           </div>
         </CardHeader>
