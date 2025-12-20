@@ -260,8 +260,8 @@ const EditTrainingSession = () => {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-white">Edit Training Session</h1>
-              <p className="text-muted-foreground">Modify your training session details and exercises</p>
+              <h1 className="text-3xl font-bold text-white">Edycja treningu</h1>
+              <p className="text-muted-foreground">Modyfikuj szczegóły treningu i ćwiczenia</p>
             </div>
           </div>
           
@@ -274,7 +274,7 @@ const EditTrainingSession = () => {
               />
               <Label htmlFor="published-toggle" className="text-white flex items-center space-x-1">
                 {formData.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                <span>{formData.published ? 'Published' : 'Draft'}</span>
+                <span>{formData.published ? 'Opublikowany' : 'Szkic'}</span>
               </Label>
             </div>
             
@@ -286,12 +286,12 @@ const EditTrainingSession = () => {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  Zapisywanie...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  Zapisz zmiany
                 </>
               )}
             </Button>
@@ -304,39 +304,39 @@ const EditTrainingSession = () => {
             {/* Basic Information */}
             <Card className="glass-effect border-white/10">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Target className="w-5 h-5 mr-2 text-primary" />
-                  Basic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="title" className="text-white">Session Title *</Label>
+              <CardTitle className="text-white flex items-center">
+                <Target className="w-5 h-5 mr-2 text-primary" />
+                Podstawowe informacje
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="title" className="text-white">Tytuł treningu *</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter an engaging session title"
+                    placeholder="Wpisz tytuł treningu"
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/60"
                     required
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="description" className="text-white">Description</Label>
+              <div>
+                <Label htmlFor="description" className="text-white">Opis</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe what participants can expect from this session..."
+                    placeholder="Opisz trening..."
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/60"
                     rows={4}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="duration" className="text-white">Duration (minutes)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="duration" className="text-white">Czas trwania (minuty)</Label>
                     <Input
                       id="duration"
                       type="number"
@@ -346,41 +346,41 @@ const EditTrainingSession = () => {
                       className="bg-white/5 border-white/10 text-white"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="difficulty" className="text-white">Difficulty Level</Label>
-                    <Select value={formData.difficulty_level} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty_level: value }))}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue placeholder="Select difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Beginner">Beginner</SelectItem>
-                        <SelectItem value="Intermediate">Intermediate</SelectItem>
-                        <SelectItem value="Advanced">Advanced</SelectItem>
+                <div>
+                  <Label htmlFor="difficulty" className="text-white">Poziom trudności</Label>
+                  <Select value={formData.difficulty_level} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty_level: value }))}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                      <SelectValue placeholder="Wybierz poziom" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Beginner">Początkujący</SelectItem>
+                      <SelectItem value="Intermediate">Średniozaawansowany</SelectItem>
+                      <SelectItem value="Advanced">Zaawansowany</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="type" className="text-white">Training Type</Label>
-                    <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="type" className="text-white">Typ treningu</Label>
+                  <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                      <SelectValue placeholder="Wybierz typ" />
+                    </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="timer">
-                          <div className="flex items-center">
-                            <Timer className="w-4 h-4 mr-2" />
-                            Timer Mode
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="manual">
-                          <div className="flex items-center">
-                            <Hand className="w-4 h-4 mr-2" />
-                            Manual Mode
-                          </div>
-                        </SelectItem>
+                      <SelectItem value="timer">
+                        <div className="flex items-center">
+                          <Timer className="w-4 h-4 mr-2" />
+                          Tryb czasowy
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="manual">
+                        <div className="flex items-center">
+                          <Hand className="w-4 h-4 mr-2" />
+                          Tryb ręczny
+                        </div>
+                      </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -399,25 +399,25 @@ const EditTrainingSession = () => {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="playlist" className="text-white">Recommended Playlist</Label>
+              <div>
+                <Label htmlFor="playlist" className="text-white">Rekomendowana playlista</Label>
                   <Input
                     id="playlist"
                     value={formData.playlist}
                     onChange={(e) => setFormData(prev => ({ ...prev, playlist: e.target.value }))}
-                    placeholder="Spotify playlist name or link"
+                    placeholder="Nazwa lub link do playlisty Spotify"
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/60"
                   />
                 </div>
 
-                <div>
-                  <Label className="text-white">Session Image</Label>
+              <div>
+                <Label className="text-white">Zdjęcie treningu</Label>
                   <div className="space-y-4">
                     {formData.thumbnail_url && (
                       <div className="relative">
                         <img
                           src={formData.thumbnail_url}
-                          alt="Session thumbnail"
+                          alt="Miniatura treningu"
                           className="w-full h-32 object-cover rounded-lg border border-white/10"
                         />
                         <Button
@@ -437,7 +437,7 @@ const EditTrainingSession = () => {
                         className="border-white/20 text-white hover:bg-white/10"
                       >
                         <Upload className="w-4 h-4 mr-2" />
-                        {formData.thumbnail_url ? 'Change Image' : 'Upload Image'}
+                        {formData.thumbnail_url ? 'Zmień obraz' : 'Dodaj obraz'}
                       </Button>
                       <input
                         id="image-upload"
@@ -465,13 +465,13 @@ const EditTrainingSession = () => {
             {/* Preview */}
             <Card className="glass-effect border-white/10">
               <CardHeader>
-                <CardTitle className="text-white">Preview</CardTitle>
+                <CardTitle className="text-white">Podgląd</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="relative">
                   <img
                     src={formData.thumbnail_url || "https://images.unsplash.com/photo-1518594023387-5565c8f3d1ce?w=400&h=300&fit=crop"}
-                    alt="Session preview"
+                    alt="Podgląd treningu"
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <div className="absolute top-2 right-2 flex space-x-1">
@@ -493,22 +493,22 @@ const EditTrainingSession = () => {
                   <div className="absolute top-2 left-2 flex space-x-1">
                     <Badge variant="outline" className="border-white/20 text-white/70 bg-black/30">
                       {formData.type === 'timer' ? (
-                        <><Timer className="w-3 h-3 mr-1" />Timer</>
+                        <><Timer className="w-3 h-3 mr-1" />Czasowy</>
                       ) : (
-                        <><Hand className="w-3 h-3 mr-1" />Manual</>
+                        <><Hand className="w-3 h-3 mr-1" />Ręczny</>
                       )}
                     </Badge>
                     {!formData.published && (
                       <Badge className="bg-orange-500/20 text-orange-400">
-                        Draft
+                        Szkic
                       </Badge>
                     )}
                   </div>
                 </div>
                 <div className="mt-4 space-y-2">
-                  <h3 className="text-white font-semibold">{formData.title || 'Untitled Session'}</h3>
+                  <h3 className="text-white font-semibold">{formData.title || 'Bez tytułu'}</h3>
                   <p className="text-muted-foreground text-sm line-clamp-2">
-                    {formData.description || 'No description provided'}
+                    {formData.description || 'Brak opisu'}
                   </p>
                 </div>
               </CardContent>
@@ -517,13 +517,13 @@ const EditTrainingSession = () => {
             {/* Session Stats */}
             <Card className="glass-effect border-white/10">
               <CardHeader>
-                <CardTitle className="text-white">Session Stats</CardTitle>
+                <CardTitle className="text-white">Statystyki treningu</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Clock className="w-4 h-4 text-blue-400" />
-                    <span className="text-muted-foreground">Duration</span>
+                    <span className="text-muted-foreground">Czas trwania</span>
                   </div>
                   <span className="text-white font-medium">
                     {formData.duration_minutes || 0} min
@@ -533,10 +533,10 @@ const EditTrainingSession = () => {
                  <div className="flex items-center justify-between">
                    <div className="flex items-center space-x-2">
                      <Target className="w-4 h-4 text-purple-400" />
-                     <span className="text-muted-foreground">Exercises</span>
+                     <span className="text-muted-foreground">Ćwiczenia</span>
                    </div>
                    <span className="text-white font-medium">
-                     {sessionExercises.warmup.length + sessionExercises.training.length + sessionExercises.stretching.length} exercises
+                     {sessionExercises.warmup.length + sessionExercises.training.length + sessionExercises.stretching.length} ćwiczeń
                    </span>
                  </div>
               </CardContent>

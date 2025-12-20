@@ -52,6 +52,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import TrainingLibrary from "@/pages/TrainingLibrary";
 import TrainingLibraryDetail from "@/pages/TrainingLibraryDetail";
 import TrainingLibrarySession from "@/pages/TrainingLibrarySession";
+import EditTrainingLibrary from "@/pages/EditTrainingLibrary";
 
 // Trainer pages
 import MyTrainings from "@/pages/trainer/MyTrainings";
@@ -360,6 +361,22 @@ const AppRoutes = () => {
          element={
            <ProtectedRoute>
              <TrainingLibrarySession />
+           </ProtectedRoute>
+         }
+       />
+       <Route
+         path="/training/library/:id/edit"
+         element={
+           <ProtectedRoute>
+             <EditTrainingLibrary />
+           </ProtectedRoute>
+         }
+       />
+       <Route
+         path="/training/library/create"
+         element={
+           <ProtectedRoute>
+             <EditTrainingLibrary />
            </ProtectedRoute>
          }
        />
