@@ -513,7 +513,7 @@ const Library = () => {
       return;
     }
 
-    navigate(`/exercise/${figure.id}`);
+    navigate(`/exercise/${figure.id}`, { state: { from: '/library' } });
   };
 
   const handleViewDetails = (e: React.MouseEvent, figure: any) => {
@@ -525,7 +525,7 @@ const Library = () => {
       return;
     }
 
-    navigate(`/exercise/${figure.id}`);
+    navigate(`/exercise/${figure.id}`, { state: { from: '/library' } });
   };
 
   return (

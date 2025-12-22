@@ -289,7 +289,7 @@ const MyExercises: React.FC = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => navigate(`/exercise/${exercise.id}`)}
+                      onClick={() => navigate(`/exercise/${exercise.id}`, { state: { from: '/trainer/my-exercises' } })}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Podgląd

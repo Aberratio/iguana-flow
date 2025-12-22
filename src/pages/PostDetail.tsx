@@ -164,7 +164,7 @@ const PostDetail = () => {
 
   const handleExerciseClick = (figureId: string) => {
     if (hasPremiumAccess) {
-      navigate(`/exercise/${figureId}`);
+      navigate(`/exercise/${figureId}`, { state: { from: `/post/${postId}` } });
     } else {
       setShowPricingModal(true);
     }

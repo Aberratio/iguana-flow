@@ -123,7 +123,7 @@ const MyJourney = () => {
           const statusInfo = statusConfig[figure.status as keyof typeof statusConfig];
           const Icon = statusInfo?.icon || Clock;
           return <Card key={figure.id} className="glass-effect border-white/10 cursor-pointer hover:transform hover:scale-105 transition-all duration-300 group" onClick={() => {
-            navigate(`/exercise/${figure.id}`);
+            navigate(`/exercise/${figure.id}`, { state: { from: '/my-journey' } });
           }}>
                   <CardContent className="p-0">
                     <div className="relative">

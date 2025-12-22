@@ -53,6 +53,7 @@ import TrainingLibrary from "@/pages/TrainingLibrary";
 import TrainingLibraryDetail from "@/pages/TrainingLibraryDetail";
 import TrainingLibrarySession from "@/pages/TrainingLibrarySession";
 import EditTrainingLibrary from "@/pages/EditTrainingLibrary";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // Trainer pages
 import MyTrainings from "@/pages/trainer/MyTrainings";
@@ -113,6 +114,32 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+// LibraryRoute - blocks access for 'free' users
+const LibraryRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user, isLoading: authLoading } = useAuth();
+  const { canAccessLibrary, isLoading: roleLoading } = useUserRole();
+
+  if (authLoading || roleLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-tr from-black to-purple-950/10 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!canAccessLibrary) {
+    return <Navigate to="/aerial-journey" replace />;
+  }
+
+  return <AppLayout>{children}</AppLayout>;
+};
+
 const ConditionalLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -169,9 +196,9 @@ const AppRoutes = () => {
       <Route
         path="/library"
         element={
-          <ProtectedRoute>
+          <LibraryRoute>
             <Library />
-          </ProtectedRoute>
+          </LibraryRoute>
         }
       />
       <Route
