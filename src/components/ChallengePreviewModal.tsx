@@ -620,7 +620,7 @@ const ChallengePreviewModal: React.FC<ChallengePreviewModalProps> = ({
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onClose();
-                                    navigate(`/exercise/${exercise.id}`);
+                                    navigate(`/exercise/${exercise.id}`, { state: { from: '/challenges' } });
                                   }}
                                   className="w-full border-white/20 text-white hover:bg-white/10"
                                 >

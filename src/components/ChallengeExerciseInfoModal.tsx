@@ -31,7 +31,7 @@ export const ChallengeExerciseInfoModal: React.FC<ChallengeExerciseInfoModalProp
 
   const handleShowFullExercise = () => {
     onClose();
-    navigate(`/exercise/${exercise.id}`);
+    navigate(`/exercise/${exercise.id}`, { state: { from: '/challenges' } });
   };
 
   return (

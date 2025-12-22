@@ -284,7 +284,7 @@ export const FigurePreviewModal: React.FC<FigurePreviewModalProps> = ({
                 <div className="flex items-center justify-around gap-2">
                   <div 
                     className="flex-1 text-center cursor-pointer" 
-                    onClick={() => navigate(`/exercise/${figure.transition_from_figure?.id}`)}
+                    onClick={() => navigate(`/exercise/${figure.transition_from_figure?.id}`, { state: { from: '/aerial-journey' } })}
                   >
                     {figure.transition_from_figure.image_url && (
                       <img 
@@ -300,7 +300,7 @@ export const FigurePreviewModal: React.FC<FigurePreviewModalProps> = ({
                   <span className="text-purple-400 text-2xl">→</span>
                   <div 
                     className="flex-1 text-center cursor-pointer" 
-                    onClick={() => navigate(`/exercise/${figure.transition_to_figure?.id}`)}
+                    onClick={() => navigate(`/exercise/${figure.transition_to_figure?.id}`, { state: { from: '/aerial-journey' } })}
                   >
                     {figure.transition_to_figure.image_url && (
                       <img 
@@ -364,7 +364,7 @@ export const FigurePreviewModal: React.FC<FigurePreviewModalProps> = ({
               )}
 
               <Button
-                onClick={() => navigate(`/exercise/${figure.id}`)}
+                onClick={() => navigate(`/exercise/${figure.id}`, { state: { from: '/aerial-journey' } })}
                 size="sm"
                 variant="ghost"
                 className="w-full text-purple-400 hover:bg-purple-400/10 text-xs h-8"

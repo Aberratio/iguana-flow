@@ -85,7 +85,7 @@ const Feed = () => {
 
   const handleExerciseClick = (figureId: string) => {
     if (hasPremiumAccess) {
-      navigate(`/exercise/${figureId}`);
+      navigate(`/exercise/${figureId}`, { state: { from: '/feed' } });
     } else {
       setShowPricingModal(true);
     }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import IguanaLogo from '@/assets/iguana-logo.svg';
 import { AdminUserImpersonationModal } from '@/components/AdminUserImpersonationModal';
@@ -25,6 +26,7 @@ const Navigation: React.FC<NavigationProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [showImpersonationModal, setShowImpersonationModal] = useState(false);
   const isMobile = useIsMobile();
+  const { canAccessLibrary } = useUserRole();
 
   // Fetch unread notifications count
   useEffect(() => {
@@ -108,12 +110,12 @@ const Navigation: React.FC<NavigationProps> = ({
     label: 'Biblioteka treningów'
   }] : [];
 
-  // Separate section for library access
-  const resourcesNavItems = [{
+  // Separate section for library access - only for non-free users
+  const resourcesNavItems = canAccessLibrary ? [{
     path: '/library',
     icon: BookOpen,
     label: 'Biblioteka'
-  }];
+  }] : [];
 
   // Trainer-specific items (not admin)
   const trainerItems = user?.role === 'trainer' && !isAdmin ? [{
@@ -187,19 +189,23 @@ const Navigation: React.FC<NavigationProps> = ({
               </Link>;
         })}
 
-          {/* Resources Section */}
-          <div className={`border-t border-white/10 ${isMobile ? 'my-2' : 'my-4'} ${isMobile ? 'block' : 'hidden lg:block'}`}></div>
-          <div className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2 ${isMobile ? 'block' : 'hidden lg:block'}`}>
-            Zasoby
-          </div>
-          
-          {resourcesNavItems.map(item => {
-          const Icon = item.icon;
-          return <Link key={item.path} to={item.path} onClick={isMobile ? onClose : undefined} className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all group relative ${isActive(item.path) ? 'bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 text-white' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>
-                <Icon className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                <span className={`font-medium ${isMobile ? 'block' : 'hidden lg:block'}`}>{item.label}</span>
-              </Link>;
-         })}
+          {/* Resources Section - only for non-free users */}
+          {resourcesNavItems.length > 0 && (
+            <>
+              <div className={`border-t border-white/10 ${isMobile ? 'my-2' : 'my-4'} ${isMobile ? 'block' : 'hidden lg:block'}`}></div>
+              <div className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2 ${isMobile ? 'block' : 'hidden lg:block'}`}>
+                Zasoby
+              </div>
+              
+              {resourcesNavItems.map(item => {
+                const Icon = item.icon;
+                return <Link key={item.path} to={item.path} onClick={isMobile ? onClose : undefined} className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all group relative ${isActive(item.path) ? 'bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 text-white' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>
+                      <Icon className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className={`font-medium ${isMobile ? 'block' : 'hidden lg:block'}`}>{item.label}</span>
+                    </Link>;
+              })}
+            </>
+          )}
 
           {/* Training Section for Admins/Trainers */}
           {trainingNavItems.length > 0 && (

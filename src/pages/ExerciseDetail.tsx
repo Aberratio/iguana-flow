@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getDifficultyLabel, getDifficultyColorClass } from "@/lib/figureUtils";
 import {
   ArrowLeft,
@@ -41,12 +41,23 @@ import { PricingModal } from "@/components/PricingModal";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import IguanaLogo from "@/assets/iguana-logo.svg";
 
+// Path labels for breadcrumb
+const pathLabels: Record<string, string> = {
+  '/challenges': 'Wyzwania',
+  '/aerial-journey': 'Podróż',
+  '/training': 'Trening',
+  '/library': 'Biblioteka',
+  '/feed': 'Feed',
+  '/profile': 'Profil',
+};
+
 const ExerciseDetail = () => {
   const { exerciseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isPremium, isTrainer, isAdmin } = useUserRole();
+  const { isPremium, isTrainer, isAdmin, canAccessLibrary } = useUserRole();
   const { getSportCategoryLabel, getFigureTypeLabel } = useDictionary();
 
   const [exercise, setExercise] = useState<any>(null);
@@ -67,6 +78,20 @@ const ExerciseDetail = () => {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
+
+  // Get the previous path from location state or determine fallback
+  const previousPath = (location.state as { from?: string })?.from;
+  const getBackPath = () => {
+    if (previousPath) return previousPath;
+    // Fallback based on user access
+    return canAccessLibrary ? '/library' : '/aerial-journey';
+  };
+  const getBackLabel = () => {
+    if (previousPath && pathLabels[previousPath]) {
+      return pathLabels[previousPath];
+    }
+    return canAccessLibrary ? 'Biblioteka' : 'Podróż';
+  };
 
   // Similar exercises hook
   const { similarExercises, loading: similarLoading } =
@@ -207,7 +232,7 @@ const ExerciseDetail = () => {
           description: "Nie udało się załadować szczegółów ćwiczenia",
           variant: "destructive",
         });
-        navigate("/library");
+        navigate(getBackPath());
       } else {
         // For non-logged-in users, just set exercise to null so they see the not found state
         setExercise(null);
@@ -288,7 +313,7 @@ const ExerciseDetail = () => {
         title: "Ćwiczenie usunięte",
         description: "Ćwiczenie zostało pomyślnie usunięte",
       });
-      navigate("/library");
+      navigate(getBackPath());
     } catch (error) {
       console.error("Error deleting exercise:", error);
       toast({
@@ -443,9 +468,9 @@ const ExerciseDetail = () => {
               <p className="text-white text-lg mb-4">
                 Ćwiczenie nie znalezione
               </p>
-              <Button onClick={() => navigate("/library")}>
+              <Button onClick={() => navigate(getBackPath())}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Powrót do biblioteki
+                Powrót do {getBackLabel()}
               </Button>
             </>
           ) : (
@@ -737,12 +762,12 @@ const ExerciseDetail = () => {
               Przejdź na Premium
             </Button>
             <Button
-              onClick={() => navigate("/library")}
+              onClick={() => navigate(getBackPath())}
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Powrót do biblioteki
+              Powrót do {getBackLabel()}
             </Button>
           </div>
         </div>
