@@ -10,6 +10,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Filter, X } from "lucide-react";
+import { useDictionary } from "@/contexts/DictionaryContext";
 
 interface TrainingLibraryFiltersProps {
   filters: {
@@ -34,6 +35,7 @@ const TrainingLibraryFilters: React.FC<TrainingLibraryFiltersProps> = ({
   isOpen = false,
   onOpenChange,
 }) => {
+  const { sportCategories, getSportCategoryLabel } = useDictionary();
   const handleCategoryChange = (category: string, checked: boolean) => {
     const newCategories = checked
       ? [...filters.category, category]
@@ -109,20 +111,21 @@ const TrainingLibraryFilters: React.FC<TrainingLibraryFiltersProps> = ({
       <div>
         <h3 className="font-semibold mb-3 text-foreground">Sporty</h3>
         <div className="space-y-2">
-          {["pole", "hoop", "silks", "hammock", "core"].map((sport) => (
-            <div key={sport} className="flex items-center space-x-2">
+          {sportCategories.map((sport) => (
+            <div key={sport.key_name} className="flex items-center space-x-2">
               <Checkbox
-                id={`sport-${sport}`}
-                checked={filters.sportType.includes(sport)}
+                id={`sport-${sport.key_name}`}
+                checked={filters.sportType.includes(sport.key_name)}
                 onCheckedChange={(checked) =>
-                  handleSportChange(sport, checked as boolean)
+                  handleSportChange(sport.key_name, checked as boolean)
                 }
               />
               <Label
-                htmlFor={`sport-${sport}`}
-                className="cursor-pointer capitalize"
+                htmlFor={`sport-${sport.key_name}`}
+                className="cursor-pointer"
               >
-                {sport}
+                {sport.icon && <span className="mr-1">{sport.icon}</span>}
+                {sport.name}
               </Label>
             </div>
           ))}

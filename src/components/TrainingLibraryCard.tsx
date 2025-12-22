@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, Clock, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { TrainingLibrary } from '@/hooks/useTrainingLibrary';
+import { useDictionary } from '@/contexts/DictionaryContext';
 
 interface TrainingLibraryCardProps {
   training: TrainingLibrary;
@@ -44,6 +45,7 @@ const TrainingLibraryCard: React.FC<TrainingLibraryCardProps> = ({
   onToggleBookmark,
 }) => {
   const navigate = useNavigate();
+  const { getSportCategoryLabel, getDifficultyLabel } = useDictionary();
 
   return (
     <Card className="group overflow-hidden bg-background-elevated border-white/10 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
@@ -130,7 +132,7 @@ const TrainingLibraryCard: React.FC<TrainingLibraryCardProps> = ({
                 variant="outline"
                 className="text-xs border-purple-500/30 text-purple-400"
               >
-                {sport}
+                {getSportCategoryLabel(sport)}
               </Badge>
             ))}
             {training.sport_type.length > 2 && (
