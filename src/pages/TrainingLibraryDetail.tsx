@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCanAccessTraining } from '@/hooks/useCanAccessTraining';
 import { useTrainingBookmarks } from '@/hooks/useTrainingBookmarks';
+import { useDictionary } from '@/contexts/DictionaryContext';
 import { PremiumLockScreen } from '@/components/PremiumLockScreen';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ const TrainingLibraryDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { canAccess } = useCanAccessTraining(training?.premium || false);
   const { bookmarkedIds, toggleBookmark } = useTrainingBookmarks(user?.id);
+  const { getSportCategoryLabel, getDifficultyLabel } = useDictionary();
 
   useEffect(() => {
     if (id) {
@@ -167,7 +169,7 @@ const TrainingLibraryDetail = () => {
               variant="outline"
               className="border-pink-500/30 text-pink-400"
             >
-              {sport}
+              {getSportCategoryLabel(sport)}
             </Badge>
           ))}
         </div>

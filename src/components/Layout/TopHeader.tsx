@@ -13,7 +13,7 @@ import { AdminUserImpersonationModal } from "@/components/AdminUserImpersonation
 const TopHeader: React.FC = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { isAdmin, isTrainer } = useUserRole();
+  const { isAdmin, isTrainer, canAccessLibrary } = useUserRole();
   const location = useLocation();
   const [isImpersonateModalOpen, setIsImpersonateModalOpen] = useState(false);
 
@@ -70,14 +70,16 @@ const TopHeader: React.FC = () => {
 
         {/* Right side - Biblioteka, Trainer, Admin & Profile */}
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/library')}
-            className="border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
-          >
-            <BookOpen className={cn("w-4 h-4", !isMobile && "mr-2")} />
-            {!isMobile && <span>Biblioteka</span>}
-          </Button>
+          {canAccessLibrary && (
+            <Button
+              variant="outline"
+              onClick={() => navigate('/library')}
+              className="border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
+            >
+              <BookOpen className={cn("w-4 h-4", !isMobile && "mr-2")} />
+              {!isMobile && <span>Biblioteka</span>}
+            </Button>
+          )}
           {isTrainer && !isAdmin && (
             <TrainerDropdown />
           )}

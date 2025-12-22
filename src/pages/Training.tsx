@@ -29,7 +29,7 @@ import SEO from "@/components/SEO";
 const Training = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isAdmin, isLoading: roleLoading } = useUserRole();
+  const { isAdmin, isTrainer, isLoading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [showCreateSession, setShowCreateSession] = useState(false);
   const [selectedSession, setSelectedSession] = useState<any>(null);
@@ -44,18 +44,25 @@ const Training = () => {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('training_sessions')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      // Trainers see only their own sessions, admins see all
+      if (!isAdmin && user?.id) {
+        query = query.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       setSessions(data || []);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast({
-        title: "Error",
-        description: "Failed to load training sessions.",
+        title: "Błąd",
+        description: "Nie udało się załadować sesji treningowych.",
         variant: "destructive",
       });
     } finally {
@@ -64,10 +71,10 @@ const Training = () => {
   };
 
   useEffect(() => {
-    if (isAdmin && !roleLoading) {
+    if ((isAdmin || isTrainer) && !roleLoading) {
       fetchSessions();
     }
-  }, [isAdmin, roleLoading]);
+  }, [isAdmin, isTrainer, roleLoading]);
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Beginner":
@@ -113,14 +120,14 @@ const Training = () => {
       
       await fetchSessions();
       toast({
-        title: "Session Deleted",
-        description: "The training session has been deleted.",
+        title: "Sesja usunięta",
+        description: "Sesja treningowa została usunięta.",
       });
     } catch (error) {
       console.error('Error deleting session:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete session.",
+        title: "Błąd",
+        description: "Nie udało się usunąć sesji.",
         variant: "destructive",
       });
     }
@@ -136,8 +143,8 @@ const Training = () => {
       />
     );
   }
-  // Show admin-only access message for non-admin users
-  if (!roleLoading && !isAdmin) {
+  // Show access denied message for users without trainer/admin role
+  if (!roleLoading && !isAdmin && !isTrainer) {
     return (
       <div className="min-h-screen p-6 flex items-center justify-center">
         <div className="max-w-2xl mx-auto text-center">
@@ -147,10 +154,10 @@ const Training = () => {
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                Tylko dla administratorów
+                Tylko dla trenerów
               </h1>
               <p className="text-muted-foreground text-lg mb-6">
-                Sesje treningowe są obecnie dostępne tylko dla administratorów.
+                Sesje treningowe są dostępne tylko dla trenerów i administratorów.
               </p>
               <div className="space-y-3 text-left">
                 <div className="flex items-center text-muted-foreground">
@@ -175,11 +182,11 @@ const Training = () => {
               Strona główna
             </Button>
             <Button
-              onClick={() => navigate("/library")}
+              onClick={() => navigate("/aerial-journey")}
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
             >
-              Zobacz bibliotekę
+              Wróć do podróży
             </Button>
           </div>
         </div>
