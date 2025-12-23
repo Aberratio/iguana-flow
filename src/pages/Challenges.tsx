@@ -7,6 +7,10 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Flame,
+  Circle,
+  Sparkles,
+  Dumbbell,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,14 +20,11 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useToast } from "@/hooks/use-toast";
 import ChallengePreviewModal from "@/components/ChallengePreviewModal";
 import CreateChallengeModal from "@/components/CreateChallengeModal";
-// ChallengePurchaseModal removed - only sport paths are paid
 import ChallengeFiltersBar from "@/components/ChallengeFiltersBar";
 import ChallengeFiltersSheet from "@/components/ChallengeFiltersSheet";
-import ChallengePathCard from "@/components/ChallengePathCard";
 import ChallengeGridView from "@/components/Challenge/ChallengeGridView";
 import { ChallengeListView } from "@/components/Challenge/ChallengeListView";
 import { useUserRole } from "@/hooks/useUserRole";
-// useSubscriptionStatus and useChallengeAccess removed - only sport paths are paid
 import { useChallengeFilters } from "@/hooks/useChallengeFilters";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,7 +39,7 @@ interface Challenge {
   description: string;
   level?: number;
   status: string;
-  dbStatus?: string; // DB status (published/draft)
+  dbStatus?: string;
   created_by: string;
   premium: boolean;
   price_usd: number;
@@ -60,14 +61,67 @@ interface Challenge {
   category?: string;
 }
 
+// Category detection based on challenge title/description
+const detectCategory = (title: string, description?: string): string => {
+  const text = `${title} ${description || ""}`.toLowerCase();
+  
+  if (text.includes("hoop") || text.includes("ring") || text.includes("aerial hoop")) {
+    return "aerial_hoop";
+  }
+  if (text.includes("pole") || text.includes("rurk")) {
+    return "pole";
+  }
+  if (text.includes("plank") || text.includes("core") || text.includes("brzuch")) {
+    return "core";
+  }
+  if (text.includes("stretching") || text.includes("rozciąg") || text.includes("flexibility") || text.includes("szpagat")) {
+    return "stretching";
+  }
+  if (text.includes("siła") || text.includes("strength") || text.includes("silowy")) {
+    return "strength";
+  }
+  
+  return "general";
+};
+
+const categoryConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  aerial_hoop: {
+    label: "Aerial Hoop",
+    icon: <Circle className="w-5 h-5" />,
+    color: "text-purple-400",
+  },
+  pole: {
+    label: "Pole Dance",
+    icon: <Sparkles className="w-5 h-5" />,
+    color: "text-pink-400",
+  },
+  core: {
+    label: "Core & Stabilizacja",
+    icon: <Flame className="w-5 h-5" />,
+    color: "text-orange-400",
+  },
+  stretching: {
+    label: "Rozciąganie",
+    icon: <Sparkles className="w-5 h-5" />,
+    color: "text-cyan-400",
+  },
+  strength: {
+    label: "Siła",
+    icon: <Dumbbell className="w-5 h-5" />,
+    color: "text-red-400",
+  },
+  general: {
+    label: "Ogólne",
+    icon: <Trophy className="w-5 h-5" />,
+    color: "text-emerald-400",
+  },
+};
+
 const Challenges = () => {
   const navigate = useNavigate();
-  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(
-    null
-  );
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  // Purchase modal removed - only sport paths are paid
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -75,23 +129,15 @@ const Challenges = () => {
   const isMobile = useIsMobile();
   const [historyStatePushed, setHistoryStatePushed] = useState(false);
 
-  const {
-    canCreateChallenges,
-    isAdmin,
-    isLoading: roleLoading,
-  } = useUserRole();
-  // Premium access check removed - only sport paths are paid
+  const { canCreateChallenges, isAdmin, isLoading: roleLoading } = useUserRole();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getDifficultyLabel, getDifficultyColor: getDifficultyColorFromDict } =
-    useDictionary();
+  const { getDifficultyLabel, getDifficultyColor: getDifficultyColorFromDict } = useDictionary();
 
   const {
     filters,
-    sortBy,
     toggleFilter,
     clearFilters,
-    setSortBy,
     activeFilterCount,
     applyFilters,
     applySorting,
@@ -103,7 +149,6 @@ const Challenges = () => {
     }
   }, [roleLoading, isAdmin, canCreateChallenges, user]);
 
-  // Handle browser back button for modal
   useEffect(() => {
     const handlePopState = () => {
       if (historyStatePushed && isModalOpen) {
@@ -113,14 +158,10 @@ const Challenges = () => {
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, [historyStatePushed, isModalOpen]);
 
-  // Cleanup history state on unmount
   useEffect(() => {
     return () => {
       if (historyStatePushed) {
@@ -132,13 +173,11 @@ const Challenges = () => {
   const fetchChallenges = async () => {
     setIsLoading(true);
     try {
-      // Get challenges based on user role
       let challengeQuery = supabase
         .from("challenges")
         .select("*")
         .order("created_at", { ascending: false });
 
-      // If not admin, show published challenges + own drafts for trainers
       if (!isAdmin) {
         if (canCreateChallenges && user) {
           challengeQuery = challengeQuery.or(
@@ -152,7 +191,6 @@ const Challenges = () => {
       const { data: allChallenges, error } = await challengeQuery;
       if (error) throw error;
 
-      // Get user's participation data if logged in
       let userParticipation: Record<string, string> = {};
       const userProgress: Record<string, number> = {};
       let completedCycles: Record<string, number> = {};
@@ -169,9 +207,7 @@ const Challenges = () => {
             return acc;
           }, {} as Record<string, string>) || {};
 
-        // Get user's progress data for challenges they're participating in
-        const participatingChallengeIds =
-          participationData?.map((p) => p.challenge_id) || [];
+        const participatingChallengeIds = participationData?.map((p) => p.challenge_id) || [];
 
         if (participatingChallengeIds.length > 0) {
           const { data: progressData } = await supabase
@@ -180,13 +216,11 @@ const Challenges = () => {
             .eq("user_id", user.id)
             .in("challenge_id", participatingChallengeIds);
 
-          // Get total calendar days for each challenge
           const { data: calendarDaysData } = await supabase
             .from("challenge_training_days")
             .select("challenge_id, id")
             .in("challenge_id", participatingChallengeIds);
 
-          // Calculate progress percentage for each challenge
           const challengeTotalDays =
             calendarDaysData?.reduce((acc, day) => {
               acc[day.challenge_id] = (acc[day.challenge_id] || 0) + 1;
@@ -196,39 +230,30 @@ const Challenges = () => {
           const challengeCompletedDays =
             progressData?.reduce((acc, progress) => {
               if (progress.status === "completed") {
-                acc[progress.challenge_id] =
-                  (acc[progress.challenge_id] || 0) + 1;
+                acc[progress.challenge_id] = (acc[progress.challenge_id] || 0) + 1;
               }
               return acc;
             }, {} as Record<string, number>) || {};
 
-          // Calculate completed cycles based on number of completed days
-          // A cycle is considered complete when all days are completed
-          completedCycles =
-            Object.keys(challengeTotalDays).reduce((acc, challengeId) => {
-              const totalDays = challengeTotalDays[challengeId] || 0;
-              const completedDays = challengeCompletedDays[challengeId] || 0;
-              // If all days are completed, count as 1 cycle
-              if (totalDays > 0 && completedDays >= totalDays) {
-                acc[challengeId] = 1;
-              } else {
-                acc[challengeId] = 0;
-              }
-              return acc;
-            }, {} as Record<string, number>);
+          completedCycles = Object.keys(challengeTotalDays).reduce((acc, challengeId) => {
+            const totalDays = challengeTotalDays[challengeId] || 0;
+            const completedDays = challengeCompletedDays[challengeId] || 0;
+            if (totalDays > 0 && completedDays >= totalDays) {
+              acc[challengeId] = 1;
+            } else {
+              acc[challengeId] = 0;
+            }
+            return acc;
+          }, {} as Record<string, number>);
 
           participatingChallengeIds.forEach((challengeId) => {
             const completedDays = challengeCompletedDays[challengeId] || 0;
             const totalDays = challengeTotalDays[challengeId] || 1;
-            userProgress[challengeId] = Math.min(
-              100,
-              Math.round((completedDays / totalDays) * 100)
-            );
+            userProgress[challengeId] = Math.min(100, Math.round((completedDays / totalDays) * 100));
           });
         }
       }
 
-      // Get participant counts for each challenge
       const challengeIds = allChallenges?.map((c) => c.id) || [];
       const { data: participantData } = await supabase
         .from("challenge_participants")
@@ -241,14 +266,13 @@ const Challenges = () => {
           return acc;
         }, {} as Record<string, number>) || {};
 
-      // Transform data
       const transformedData: Challenge[] =
         allChallenges?.map((challenge) => {
-          const userParticipating = userParticipation[challenge.id];
+          const userParticipatingStatus = userParticipation[challenge.id];
           const progress = userProgress[challenge.id] || 0;
 
           let status;
-          if (userParticipating) {
+          if (userParticipatingStatus) {
             if (progress === 100) {
               status = "completed";
             } else {
@@ -264,19 +288,19 @@ const Challenges = () => {
             description: challenge.description,
             level: challenge.level,
             status,
-            dbStatus: challenge.status, // Preserve DB status (published/draft)
+            dbStatus: challenge.status,
             created_by: challenge.created_by,
             premium: challenge.premium || false,
             price_usd: challenge.price_usd,
             price_pln: challenge.price_pln,
-            duration: 28, // Default 28 days
+            duration: 28,
             participants: participantCounts[challenge.id] || 0,
             difficulty: challenge.difficulty_level || "intermediate",
             userProgress: userProgress[challenge.id] || 0,
             image:
               challenge.image_url ||
               "https://images.unsplash.com/photo-1506629905496-4d3e5b9e7e59?w=400&h=200&fit=crop",
-            userParticipating: !!userParticipating,
+            userParticipating: !!userParticipatingStatus,
             created_at: challenge.created_at,
             updated_at: challenge.updated_at,
             series_name: challenge.series_name,
@@ -285,22 +309,9 @@ const Challenges = () => {
             completedCycles: completedCycles[challenge.id] || 0,
             start_date: challenge.start_date,
             end_date: challenge.end_date,
-            category: "General",
+            category: detectCategory(challenge.title, challenge.description),
           };
         }) || [];
-
-      // Debug: Check for problematic challenge
-      const problematicChallenge = transformedData.find(c => c.id === '26d319e5-49c8-4b30-a7e7-35c59d44b7e5');
-      if (problematicChallenge) {
-        console.log('[Challenges] Problematic challenge found:', problematicChallenge);
-      } else {
-        console.log('[Challenges] Problematic challenge NOT in transformedData');
-        console.log('[Challenges] All challenges from DB:', allChallenges?.map(c => ({ 
-          id: c.id, 
-          title: c.title, 
-          status: c.status 
-        })));
-      }
 
       setChallenges(transformedData);
     } catch (error) {
@@ -312,52 +323,41 @@ const Challenges = () => {
 
   // Apply filters and sorting
   const filteredAndSortedChallenges = useMemo(() => {
-    // Admins bypass UI filters when activeFilterCount === 0
     if (isAdmin && activeFilterCount === 0) {
-      console.log('[Challenges] Admin mode: showing all challenges, bypassing UI filters');
       return applySorting(challenges);
     }
-    
     const filtered = applyFilters(challenges);
     return applySorting(filtered);
-  }, [challenges, filters, sortBy, isAdmin, activeFilterCount]);
+  }, [challenges, filters, isAdmin, activeFilterCount]);
 
-  // Group challenges by series
-  const { seriesChallenges, standaloneChallenges } = useMemo(() => {
-    const series: Record<string, Challenge[]> = {};
-    const standalone: Challenge[] = [];
+  // Group challenges by category
+  const challengesByCategory = useMemo(() => {
+    const grouped: Record<string, Challenge[]> = {};
 
     filteredAndSortedChallenges.forEach((challenge) => {
-      // Group by series or standalone (regardless of status)
-      if (challenge.series_name) {
-        if (!series[challenge.series_name]) {
-          series[challenge.series_name] = [];
-        }
-        series[challenge.series_name].push(challenge);
-      } else {
-        standalone.push(challenge);
+      const category = challenge.category || "general";
+      if (!grouped[category]) {
+        grouped[category] = [];
       }
+      grouped[category].push(challenge);
     });
 
-    // Sort challenges within each series by series_order
-    Object.keys(series).forEach((seriesName) => {
-      series[seriesName].sort(
-        (a, b) => (a.series_order || 0) - (b.series_order || 0)
-      );
+    // Sort categories: put categories with active challenges first
+    const sortedCategories = Object.keys(grouped).sort((a, b) => {
+      const aHasActive = grouped[a].some((c) => c.status === "active");
+      const bHasActive = grouped[b].some((c) => c.status === "active");
+      if (aHasActive && !bHasActive) return -1;
+      if (!aHasActive && bHasActive) return 1;
+      return 0;
     });
 
-    return {
-      seriesChallenges: series,
-      standaloneChallenges: standalone,
-    };
+    return { grouped, sortedCategories };
   }, [filteredAndSortedChallenges]);
 
   const openChallengeModal = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setIsModalOpen(true);
-    
-    // Add history entry for back button handling
-    window.history.pushState({ modalOpen: true }, '', window.location.href);
+    window.history.pushState({ modalOpen: true }, "", window.location.href);
     setHistoryStatePushed(true);
   };
 
@@ -374,8 +374,6 @@ const Challenges = () => {
       return;
     }
 
-    // Premium check removed - challenges are free, only sport paths are paid
-
     try {
       const { error, data } = await supabase
         .from("challenge_participants")
@@ -389,7 +387,6 @@ const Challenges = () => {
 
       if (error) throw error;
 
-      // Small delay to ensure data is saved
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (data && data.length > 0) {
@@ -411,13 +408,11 @@ const Challenges = () => {
 
   const closeChallengeModal = () => {
     if (historyStatePushed) {
-      // User closed modal via UI (X button, etc.)
       setHistoryStatePushed(false);
       setIsModalOpen(false);
       setSelectedChallenge(null);
       window.history.back();
     } else {
-      // Modal closed via back button (popstate already handled it)
       setIsModalOpen(false);
       setSelectedChallenge(null);
     }
@@ -441,31 +436,22 @@ const Challenges = () => {
   };
 
   const renderChallengeCard = (challenge: Challenge) => {
-    // Premium lock removed - challenges are free
     const showBadge = challenge.is_new;
-    const badgeType = "new";
 
     return (
       <Card
         key={challenge.id}
         className="overflow-hidden hover:shadow-xl transition-all duration-300 relative group"
       >
-        {/* Admin DB Status Badge */}
         {isAdmin && challenge.dbStatus && (
           <div className="absolute top-2 left-2 z-10">
-            <Badge
-              variant="outline"
-              className="bg-black/70 backdrop-blur-sm text-xs"
-            >
+            <Badge variant="outline" className="bg-black/70 backdrop-blur-sm text-xs">
               DB: {challenge.dbStatus}
             </Badge>
           </div>
         )}
-        
-        {/* Premium badge removed - challenges are free */}
 
         <CardContent className="p-0">
-          {/* Thumbnail 16:9 */}
           <div className="relative overflow-hidden">
             <AspectRatio ratio={16 / 9}>
               <img
@@ -475,30 +461,19 @@ const Challenges = () => {
                 onClick={() => openChallengeModal(challenge)}
               />
             </AspectRatio>
-            {/* Only show New badge */}
             {showBadge && (
-              <Badge
-                variant="secondary"
-                className="absolute top-2 right-2"
-              >
+              <Badge variant="secondary" className="absolute top-2 right-2">
                 Nowe
               </Badge>
             )}
           </div>
 
-          {/* Content */}
           <div className="p-4 space-y-3">
-            {/* Title & Description */}
             <div>
-              <h3 className="text-lg font-semibold mb-1 line-clamp-1">
-                {challenge.title}
-              </h3>
-              <p className="text-sm text-muted-foreground line-clamp-1">
-                {challenge.description}
-              </p>
+              <h3 className="text-lg font-semibold mb-1 line-clamp-1">{challenge.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-1">{challenge.description}</p>
             </div>
 
-            {/* Meta - one line with icons */}
             <div className="flex items-center gap-2 sm:gap-3 text-sm text-muted-foreground flex-wrap">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
@@ -513,20 +488,12 @@ const Challenges = () => {
               )}
               <Badge
                 variant="outline"
-                className={`${getDifficultyColor(
-                  challenge.difficulty
-                )} text-xs sm:text-sm`}
+                className={`${getDifficultyColor(challenge.difficulty)} text-xs sm:text-sm`}
               >
-                <span className="sm:hidden">
-                  {getDifficultyLabel(challenge.difficulty)}
-                </span>
-                <span className="hidden sm:inline">
-                  {getDifficultyLabel(challenge.difficulty)}
-                </span>
+                {getDifficultyLabel(challenge.difficulty)}
               </Badge>
             </div>
 
-            {/* Progress 0-100% */}
             {challenge.userParticipating && (
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
@@ -542,7 +509,6 @@ const Challenges = () => {
               </div>
             )}
 
-            {/* CTAs */}
             <div className="flex gap-2 pt-2">
               {!challenge.userParticipating && (
                 <Button
@@ -576,7 +542,6 @@ const Challenges = () => {
               </Button>
             </div>
 
-            {/* Secondary link for completed */}
             {challenge.status === "completed" && (
               <Button
                 variant="ghost"
@@ -602,209 +567,182 @@ const Challenges = () => {
         url="https://iguanaflow.app/challenges"
       />
       <div className="min-h-screen p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2">Wyzwania</h1>
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Przekrocz swoje granice ze strukturalnym treningiem
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {canCreateChallenges && (
-                <Button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  variant="default"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Stwórz wyzwanie
-                </Button>
-              )}
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Wyzwania</h1>
+                <p className="text-muted-foreground text-sm sm:text-base">
+                  Przekrocz swoje granice ze strukturalnym treningiem
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {canCreateChallenges && (
+                  <Button onClick={() => setIsCreateModalOpen(true)} variant="default">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Stwórz wyzwanie
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Filters - Desktop Bar, Mobile Sheet */}
-        {!isMobile ? (
-          <ChallengeFiltersBar
-            filters={filters}
-            sortBy={sortBy}
-            activeFilterCount={activeFilterCount}
-            onToggleFilter={toggleFilter}
-            onClearFilters={clearFilters}
-            onSortChange={setSortBy}
-          />
-        ) : (
+          {/* Filters - Desktop Bar, Mobile Sheet */}
+          {!isMobile && (
+            <ChallengeFiltersBar
+              filters={filters}
+              activeFilterCount={activeFilterCount}
+              onToggleFilter={toggleFilter}
+              onClearFilters={clearFilters}
+            />
+          )}
+
           <ChallengeFiltersSheet
             filters={filters}
-            sortBy={sortBy}
             activeFilterCount={activeFilterCount}
             onToggleFilter={toggleFilter}
             onClearFilters={clearFilters}
-            onSortChange={setSortBy}
             isOpen={isFilterOpen}
             onOpenChange={setIsFilterOpen}
           />
-        )}
 
-        {/* Results summary and view toggle */}
-        {filteredAndSortedChallenges.length > 0 && (
-          <div className="mb-4 flex items-center justify-between">
-            <div className="text-white/60 text-sm">
-              Pokazano {filteredAndSortedChallenges.length} z{" "}
-              {challenges.length} wyzwań
-              {isAdmin && activeFilterCount === 0 && (
-                <span className="ml-2 text-amber-400">(Tryb admina - wszystkie statusy)</span>
-              )}
+          {/* Results summary and view toggle */}
+          {filteredAndSortedChallenges.length > 0 && (
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-muted-foreground text-sm">
+                {activeFilterCount > 0 ? (
+                  <span>
+                    Pokazano {filteredAndSortedChallenges.length} z {challenges.length} wyzwań
+                  </span>
+                ) : (
+                  <span>{challenges.length} wyzwań</span>
+                )}
+                {isAdmin && activeFilterCount === 0 && (
+                  <span className="ml-2 text-amber-400">(Admin)</span>
+                )}
+              </div>
+              <div className="flex gap-1 bg-muted/30 rounded-lg p-1">
+                <Button
+                  size="sm"
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  className="h-8 w-8 p-0"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  className="h-8 w-8 p-0"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Main Content */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <div className="aspect-video bg-muted" />
+                  <CardContent className="p-4 space-y-3">
+                    <div className="h-4 bg-muted rounded" />
+                    <div className="h-3 bg-muted rounded w-2/3" />
+                    <div className="h-8 bg-muted rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : filteredAndSortedChallenges.length === 0 ? (
+            <div className="text-center py-12">
+              <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Brak dostępnych wyzwań</h3>
+              <p className="text-muted-foreground">
+                {activeFilterCount > 0
+                  ? "Spróbuj zmienić filtry, aby zobaczyć więcej wyzwań."
+                  : "Wróć później po nowe wyzwania!"}
+              </p>
               {activeFilterCount > 0 && (
-                <span className="ml-2 text-blue-400">
-                  ({activeFilterCount} {activeFilterCount === 1 ? 'filtr' : activeFilterCount < 5 ? 'filtry' : 'filtrów'} {activeFilterCount === 1 ? 'aktywny' : activeFilterCount < 5 ? 'aktywne' : 'aktywnych'})
+                <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                  Wyczyść filtry
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {challengesByCategory.sortedCategories.map((categoryKey) => {
+                const categoryData = categoryConfig[categoryKey] || categoryConfig.general;
+                const categoryChallenges = challengesByCategory.grouped[categoryKey];
+
+                return (
+                  <section key={categoryKey} className="space-y-4">
+                    {/* Category Header */}
+                    <div className="flex items-center gap-3">
+                      <div className={`${categoryData.color}`}>{categoryData.icon}</div>
+                      <h2 className="text-xl font-semibold">{categoryData.label}</h2>
+                      <Badge variant="secondary" className="ml-auto">
+                        {categoryChallenges.length}
+                      </Badge>
+                    </div>
+
+                    {/* Category Challenges */}
+                    {viewMode === "grid" ? (
+                      <ChallengeGridView>
+                        {categoryChallenges.map((challenge) => renderChallengeCard(challenge))}
+                      </ChallengeGridView>
+                    ) : (
+                      <ChallengeListView
+                        challenges={categoryChallenges}
+                        onChallengeClick={(challenge) => openChallengeModal(challenge)}
+                        onPurchase={() => {}}
+                        onJoinChallenge={handleJoinChallenge}
+                        getDifficultyColor={getDifficultyColor}
+                        getButtonText={getButtonText}
+                        userPurchases={{}}
+                        hasPremiumAccess={true}
+                      />
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Mobile Filter Button - floating */}
+          {isMobile && (
+            <Button
+              className="fixed bottom-20 right-4 z-50 rounded-full w-14 h-14 shadow-lg"
+              size="icon"
+              onClick={() => setIsFilterOpen(true)}
+            >
+              <Filter className="w-6 h-6" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {activeFilterCount}
                 </span>
               )}
-            </div>
-            <div className="flex gap-1 bg-white/5 rounded-lg p-1">
-              <Button
-                size="sm"
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                className={`h-8 w-8 p-0 ${
-                  viewMode === "grid"
-                    ? "bg-white/10 text-white"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                className={`h-8 w-8 p-0 ${
-                  viewMode === "list"
-                    ? "bg-white/10 text-white"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-                onClick={() => setViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+            </Button>
+          )}
+        </div>
 
+        {/* Modals */}
+        <ChallengePreviewModal
+          challenge={selectedChallenge}
+          isOpen={isModalOpen}
+          onClose={closeChallengeModal}
+          ctaMessage={getButtonText(selectedChallenge?.status || "")}
+        />
 
-        {/* Main Challenges Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Card key={index} className="animate-pulse">
-                <div className="aspect-video bg-muted" />
-                <CardContent className="p-4 space-y-3">
-                  <div className="h-4 bg-muted rounded" />
-                  <div className="h-3 bg-muted rounded w-2/3" />
-                  <div className="h-8 bg-muted rounded" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredAndSortedChallenges.length === 0 ? (
-          <div className="text-center py-12">
-            <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              Brak dostępnych wyzwań
-            </h3>
-            <p className="text-muted-foreground">
-              Wróć później po nowe wyzwania!
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Series Paths */}
-            {Object.keys(seriesChallenges).length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Ścieżki</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {Object.entries(seriesChallenges).map(
-                    ([seriesName, seriesList]) => (
-                      <ChallengePathCard
-                        key={seriesName}
-                        seriesName={seriesName}
-                        challenges={seriesList}
-                        onChallengeClick={openChallengeModal}
-                        onJoinChallenge={handleJoinChallenge}
-                        hasAccess={true}
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Standalone Challenges */}
-            {standaloneChallenges.length > 0 && (
-              <div className="space-y-4">
-                {Object.keys(seriesChallenges).length > 0 && (
-                  <h2 className="text-xl font-semibold">Pozostałe wyzwania</h2>
-                )}
-                {viewMode === "grid" ? (
-                  <ChallengeGridView>
-                    {standaloneChallenges.map((challenge) =>
-                      renderChallengeCard(challenge)
-                    )}
-                  </ChallengeGridView>
-                ) : (
-                  <ChallengeListView
-                    challenges={standaloneChallenges}
-                    onChallengeClick={(challenge) =>
-                      openChallengeModal(challenge)
-                    }
-                    onPurchase={() => {}}
-                    onJoinChallenge={handleJoinChallenge}
-                    getDifficultyColor={getDifficultyColor}
-                    getButtonText={getButtonText}
-                    userPurchases={{}}
-                    hasPremiumAccess={true}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Mobile Filter Button - floating */}
-        {isMobile && (
-          <Button
-            className="fixed bottom-20 right-4 z-50 rounded-full w-14 h-14 shadow-lg"
-            size="icon"
-            onClick={() => setIsFilterOpen(true)}
-          >
-            <Filter className="w-6 h-6" />
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-        )}
+        <CreateChallengeModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onChallengeCreated={fetchChallenges}
+        />
       </div>
-
-      {/* Modals */}
-      <ChallengePreviewModal
-        challenge={selectedChallenge}
-        isOpen={isModalOpen}
-        onClose={closeChallengeModal}
-        ctaMessage={getButtonText(selectedChallenge?.status || "")}
-      />
-
-      <CreateChallengeModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onChallengeCreated={fetchChallenges}
-      />
-
-      {/* ChallengePurchaseModal removed - only sport paths are paid */}
-    </div>
     </>
   );
 };
