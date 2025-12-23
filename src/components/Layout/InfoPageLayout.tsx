@@ -4,12 +4,15 @@ import { ArrowLeft, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IguanaLogo from "@/assets/iguana-logo.svg";
 import AuthModal from "@/components/Auth/AuthModal";
+import TopHeader from "./TopHeader";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface InfoPageLayoutProps {
   children: React.ReactNode;
 }
 
 const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({ children }) => {
+  const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
@@ -26,57 +29,63 @@ const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({ children }) => {
         <div className="hero-particle-tropical" style={{ width: '120px', height: '120px', top: '65%', right: '15%' }}></div>
       </div>
 
-      {/* Header - identical to landing page */}
-      <header className="fixed top-0 w-full z-50 glass-effect border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
-            <img
-              src={IguanaLogo}
-              alt="IguanaFlow Logo"
-              className="w-6 h-6 sm:w-8 sm:h-8"
-            />
-            <span className="text-lg sm:text-xl font-bold gradient-text">
-              IguanaFlow
-            </span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleAuthClick("login")}
-              className="text-xs sm:text-sm"
-            >
-              Zaloguj się
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleAuthClick("register")}
-              className="text-xs sm:text-sm"
-            >
-              Rozpocznij
-            </Button>
+      {/* Conditional Header - TopHeader for logged in users, login buttons for guests */}
+      {user ? (
+        <TopHeader />
+      ) : (
+        <header className="fixed top-0 w-full z-50 glass-effect border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
+              <img
+                src={IguanaLogo}
+                alt="IguanaFlow Logo"
+                className="w-6 h-6 sm:w-8 sm:h-8"
+              />
+              <span className="text-lg sm:text-xl font-bold gradient-text">
+                IguanaFlow
+              </span>
+            </Link>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleAuthClick("login")}
+                className="text-xs sm:text-sm"
+              >
+                Zaloguj się
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleAuthClick("register")}
+                className="text-xs sm:text-sm"
+              >
+                Rozpocznij
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <AuthModal
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        mode={authMode}
-        onModeChange={setAuthMode}
-      />
+      {!user && (
+        <AuthModal
+          open={showAuthModal}
+          onOpenChange={setShowAuthModal}
+          mode={authMode}
+          onModeChange={setAuthMode}
+        />
+      )}
 
-      {/* Back Button - elegant and visible */}
+      {/* Back Button - different link for logged in vs guests */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-4">
-        <Link to="/">
+        <Link to={user ? "/aerial-journey" : "/"}>
           <Button
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-foreground group"
           >
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Powrót na stronę główną
+            {user ? "Powrót do aplikacji" : "Powrót na stronę główną"}
           </Button>
         </Link>
       </div>
