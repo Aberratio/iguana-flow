@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { UpdateChecker } from "@/components/UpdateChecker";
+import { UpdateBanner } from "@/components/UpdateBanner";
 import { OfflineNotification } from "@/components/OfflineNotification";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
@@ -545,12 +545,12 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <UpdateChecker />
         <OfflineNotification />
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <UpdateBanner />
             <AppRoutes />
           </AuthProvider>
         </BrowserRouter>
