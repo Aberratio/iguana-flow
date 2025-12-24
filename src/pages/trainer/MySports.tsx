@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { 
   Shield, 
   Eye, 
@@ -16,7 +17,8 @@ import {
   Layers, 
   Trophy,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  Dumbbell
 } from 'lucide-react';
 import SEO from '@/components/SEO';
 
@@ -158,8 +160,12 @@ const MySports: React.FC = () => {
                     </div>
                   </div>
                   <Badge 
+                    className={cn(
+                      sport.is_published 
+                        ? "bg-green-500/20 text-green-400 border-green-500/50" 
+                        : ""
+                    )}
                     variant={sport.is_published ? "default" : "secondary"}
-                    className={sport.is_published ? "bg-green-500/20 text-green-400" : ""}
                   >
                     {sport.is_published ? 'Opublikowany' : 'Szkic'}
                   </Badge>
@@ -182,7 +188,7 @@ const MySports: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button
                     variant="outline"
                     className="w-full"
@@ -223,30 +229,30 @@ const MySports: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button 
                 variant="outline" 
-                className="justify-start"
+                className="justify-start h-auto py-3"
                 onClick={() => navigate('/trainer/my-challenges')}
               >
-                <Trophy className="w-4 h-4 mr-2" />
-                Moje wyzwania
-                <ArrowRight className="w-4 h-4 ml-auto" />
+                <Trophy className="w-4 h-4 mr-2 text-amber-400" />
+                <span className="flex-1 text-left">Moje wyzwania</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <Button 
                 variant="outline" 
-                className="justify-start"
+                className="justify-start h-auto py-3"
                 onClick={() => navigate('/trainer/my-trainings')}
               >
-                <Layers className="w-4 h-4 mr-2" />
-                Moje treningi
-                <ArrowRight className="w-4 h-4 ml-auto" />
+                <Dumbbell className="w-4 h-4 mr-2 text-blue-400" />
+                <span className="flex-1 text-left">Moje treningi</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <Button 
                 variant="outline" 
-                className="justify-start"
+                className="justify-start h-auto py-3"
                 onClick={() => navigate('/trainer/my-exercises')}
               >
-                <Users className="w-4 h-4 mr-2" />
-                Moje ćwiczenia
-                <ArrowRight className="w-4 h-4 ml-auto" />
+                <Layers className="w-4 h-4 mr-2 text-green-400" />
+                <span className="flex-1 text-left">Moje ćwiczenia</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </CardContent>

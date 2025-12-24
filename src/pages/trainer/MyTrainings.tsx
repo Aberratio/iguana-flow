@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { 
   Plus, 
   Search, 
@@ -208,19 +209,24 @@ const MyTrainings: React.FC = () => {
           </div>
         ) : filteredTrainings.length === 0 ? (
           <Card className="bg-card/50 backdrop-blur border-border">
-            <CardContent className="flex flex-col items-center justify-center py-12">
+            <CardContent className="flex flex-col items-center justify-center py-12 px-4">
               <Dumbbell className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Brak treningów</h3>
-              <p className="text-muted-foreground text-center mb-4">
+              <h3 className="text-lg font-medium mb-2 text-center">Brak treningów</h3>
+              <p className="text-muted-foreground text-center mb-4 max-w-sm">
                 {statusFilter === 'archived' 
                   ? 'Nie masz zarchiwizowanych treningów'
                   : 'Nie masz jeszcze żadnych treningów. Stwórz pierwszy!'}
               </p>
               {statusFilter !== 'archived' && (
-                <Button onClick={() => navigate('/training/library/create')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Stwórz trening
-                </Button>
+                <>
+                  <Button onClick={() => navigate('/training/library/create')} className="mb-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Stwórz trening
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center max-w-xs">
+                    💡 Wskazówka: Treningi składają się z ćwiczeń. Upewnij się, że masz już dodane ćwiczenia.
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
@@ -238,15 +244,20 @@ const MyTrainings: React.FC = () => {
                     <CardTitle className="text-lg line-clamp-1">
                       {training.title}
                     </CardTitle>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-shrink-0">
                       {training.deleted_at && (
                         <Badge variant="secondary" className="text-xs">
                           Archiwum
                         </Badge>
                       )}
                       <Badge 
+                        className={cn(
+                          "text-xs",
+                          training.is_published 
+                            ? "bg-green-500/20 text-green-400 border-green-500/50" 
+                            : ""
+                        )}
                         variant={training.is_published ? 'default' : 'outline'}
-                        className="text-xs"
                       >
                         {training.is_published ? 'Opublikowany' : 'Szkic'}
                       </Badge>
@@ -267,7 +278,7 @@ const MyTrainings: React.FC = () => {
                     </Badge>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -290,16 +301,23 @@ const MyTrainings: React.FC = () => {
                     )}
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
+                      className="sm:w-auto"
                       onClick={() => {
                         setSelectedTraining(training);
                         setArchiveDialogOpen(true);
                       }}
                     >
                       {training.deleted_at ? (
-                        <ArchiveRestore className="w-4 h-4" />
+                        <>
+                          <ArchiveRestore className="w-4 h-4 mr-1" />
+                          <span className="sm:hidden">Przywróć</span>
+                        </>
                       ) : (
-                        <Archive className="w-4 h-4" />
+                        <>
+                          <Archive className="w-4 h-4 mr-1" />
+                          <span className="sm:hidden">Archiwizuj</span>
+                        </>
                       )}
                     </Button>
                   </div>

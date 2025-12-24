@@ -202,19 +202,24 @@ const MyExercises: React.FC = () => {
           </div>
         ) : filteredExercises.length === 0 ? (
           <Card className="bg-card/50 backdrop-blur border-border">
-            <CardContent className="flex flex-col items-center justify-center py-12">
+            <CardContent className="flex flex-col items-center justify-center py-12 px-4">
               <FolderOpen className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Brak ćwiczeń</h3>
-              <p className="text-muted-foreground text-center mb-4">
+              <h3 className="text-lg font-medium mb-2 text-center">Brak ćwiczeń</h3>
+              <p className="text-muted-foreground text-center mb-4 max-w-sm">
                 {statusFilter === 'archived' 
                   ? 'Nie masz zarchiwizowanych ćwiczeń'
                   : 'Nie masz jeszcze żadnych ćwiczeń. Stwórz pierwsze!'}
               </p>
               {statusFilter !== 'archived' && (
-                <Button onClick={() => navigate('/exercise/new')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Stwórz ćwiczenie
-                </Button>
+                <>
+                  <Button onClick={() => navigate('/exercise/new')} className="mb-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Stwórz ćwiczenie
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center max-w-xs">
+                    💡 Wskazówka: Ćwiczenia to podstawowe elementy treningów i wyzwań. Dodaj zdjęcie lub wideo dla lepszego efektu.
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
@@ -284,7 +289,7 @@ const MyExercises: React.FC = () => {
                     )}
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -307,16 +312,23 @@ const MyExercises: React.FC = () => {
                     )}
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
+                      className="sm:w-auto"
                       onClick={() => {
                         setSelectedExercise(exercise);
                         setArchiveDialogOpen(true);
                       }}
                     >
                       {exercise.deleted_at ? (
-                        <ArchiveRestore className="w-4 h-4" />
+                        <>
+                          <ArchiveRestore className="w-4 h-4 mr-1" />
+                          <span className="sm:hidden">Przywróć</span>
+                        </>
                       ) : (
-                        <Archive className="w-4 h-4" />
+                        <>
+                          <Archive className="w-4 h-4 mr-1" />
+                          <span className="sm:hidden">Archiwizuj</span>
+                        </>
                       )}
                     </Button>
                   </div>
