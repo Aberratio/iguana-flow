@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ArrowLeft, ImageIcon, Save } from "lucide-react";
+import { Plus, ArrowLeft, ImageIcon, Lightbulb } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useDictionary } from "@/contexts/DictionaryContext";
 import { cn } from "@/lib/utils";
 import SEO from "@/components/SEO";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 // Zod validation schema
 const challengeSchema = z.object({
@@ -282,7 +283,10 @@ const CreateChallenge = () => {
 
               {/* Level */}
               <div className="space-y-2">
-                <Label htmlFor="level">Poziom</Label>
+                <Label htmlFor="level" className="flex items-center">
+                  Poziom
+                  <HintTooltip content="Określa trudność wyzwania. 1 = najbardziej początkujący, wyższe wartości = trudniejsze." />
+                </Label>
                 <Input
                   id="level"
                   type="number"
@@ -299,7 +303,10 @@ const CreateChallenge = () => {
 
               {/* Difficulty Level */}
               <div className="space-y-2">
-                <Label htmlFor="difficulty">Poziom trudności *</Label>
+                <Label htmlFor="difficulty" className="flex items-center">
+                  Poziom trudności *
+                  <HintTooltip content="Określa ogólną trudność wyzwania. Pomaga użytkownikom wybrać odpowiednie wyzwanie." />
+                </Label>
                 <Select
                   value={difficultyLevel}
                   onValueChange={(value) => {
@@ -337,7 +344,10 @@ const CreateChallenge = () => {
 
               {/* Challenge Type */}
               <div className="space-y-2">
-                <Label htmlFor="type">Typ wyzwania *</Label>
+                <Label htmlFor="type" className="flex items-center">
+                  Typ wyzwania *
+                  <HintTooltip content="Manualny = użytkownik sam odznacza wykonane ćwiczenia. Czasowy = timer automatycznie liczy czas wykonania." />
+                </Label>
                 <Select
                   value={type}
                   onValueChange={(value) => {
@@ -409,6 +419,15 @@ const CreateChallenge = () => {
                   )}
                 </div>
               </div>
+
+              {/* Hint for trainers */}
+              <div className="bg-muted/30 rounded-lg p-4 flex items-start gap-3">
+                <Lightbulb className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Wskazówka:</span>{' '}
+                  Po utworzeniu wyzwania zostaniesz przekierowany do edycji, gdzie dodasz dni treningowe i ćwiczenia.
+                </div>
+              </div>
             </div>
 
             {/* Actions */}
@@ -440,10 +459,6 @@ const CreateChallenge = () => {
                 )}
               </Button>
             </div>
-
-            <p className="text-sm text-muted-foreground text-center">
-              Po utworzeniu zostaniesz przekierowany do edycji, gdzie dodasz dni treningowe i ćwiczenia.
-            </p>
           </form>
         </div>
       </div>

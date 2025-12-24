@@ -167,7 +167,10 @@ const MyChallenges: React.FC = () => {
     c.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isArchived: boolean) => {
+    if (isArchived) {
+      return <Badge variant="secondary" className="text-xs">Archiwum</Badge>;
+    }
     switch (status) {
       case 'published':
         return <Badge className="bg-green-500/20 text-green-400 border-green-500/50">Opublikowane</Badge>;
@@ -257,19 +260,24 @@ const MyChallenges: React.FC = () => {
           </div>
         ) : filteredChallenges.length === 0 ? (
           <Card className="bg-card/50 backdrop-blur border-border">
-            <CardContent className="flex flex-col items-center justify-center py-12">
+            <CardContent className="flex flex-col items-center justify-center py-12 px-4">
               <Trophy className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Brak wyzwań</h3>
-              <p className="text-muted-foreground text-center mb-4">
+              <h3 className="text-lg font-medium mb-2 text-center">Brak wyzwań</h3>
+              <p className="text-muted-foreground text-center mb-4 max-w-sm">
                 {statusFilter === 'archived' 
                   ? 'Nie masz zarchiwizowanych wyzwań'
                   : 'Nie masz jeszcze żadnych wyzwań. Stwórz pierwsze!'}
               </p>
               {statusFilter !== 'archived' && (
-                <Button onClick={() => navigate('/challenges/create')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Stwórz wyzwanie
-                </Button>
+                <>
+                  <Button onClick={() => navigate('/challenges/create')} className="mb-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Stwórz wyzwanie
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center max-w-xs">
+                    💡 Wskazówka: Zacznij od stworzenia ćwiczeń, które później wykorzystasz w wyzwaniach.
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
@@ -296,13 +304,8 @@ const MyChallenges: React.FC = () => {
                     <CardTitle className="text-lg line-clamp-1">
                       {challenge.title}
                     </CardTitle>
-                    <div className="flex flex-wrap gap-1">
-                      {challenge.deleted_at && (
-                        <Badge variant="secondary" className="text-xs">
-                          Archiwum
-                        </Badge>
-                      )}
-                      {getStatusBadge(challenge.status)}
+                    <div className="flex flex-wrap gap-1 flex-shrink-0">
+                      {getStatusBadge(challenge.status, challenge.deleted_at !== null)}
                     </div>
                   </div>
                   <CardDescription className="line-clamp-2">
@@ -345,7 +348,7 @@ const MyChallenges: React.FC = () => {
                     </CollapsibleContent>
                   </Collapsible>
                   
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -368,16 +371,23 @@ const MyChallenges: React.FC = () => {
                     )}
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
+                      className="sm:w-auto"
                       onClick={() => {
                         setSelectedChallenge(challenge);
                         setArchiveDialogOpen(true);
                       }}
                     >
                       {challenge.deleted_at ? (
-                        <ArchiveRestore className="w-4 h-4" />
+                        <>
+                          <ArchiveRestore className="w-4 h-4 mr-1" />
+                          <span className="sm:hidden">Przywróć</span>
+                        </>
                       ) : (
-                        <Archive className="w-4 h-4" />
+                        <>
+                          <Archive className="w-4 h-4 mr-1" />
+                          <span className="sm:hidden">Archiwizuj</span>
+                        </>
                       )}
                     </Button>
                   </div>
