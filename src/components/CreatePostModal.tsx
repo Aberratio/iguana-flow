@@ -119,8 +119,8 @@ export const CreatePostModal = ({
   const handleSubmit = async () => {
     if (!content.trim()) {
       toast({
-        title: "Error",
-        description: "Please add some content to your post",
+        title: "Błąd",
+        description: "Dodaj treść do swojego posta",
         variant: "destructive",
       });
       return;
@@ -128,8 +128,8 @@ export const CreatePostModal = ({
 
     if (!user) {
       toast({
-        title: "Error",
-        description: "You must be logged in to create a post",
+        title: "Błąd",
+        description: "Musisz być zalogowany(a), aby utworzyć post",
         variant: "destructive",
       });
       return;
@@ -207,13 +207,13 @@ export const CreatePostModal = ({
       onClose();
 
       toast({
-        title: "Post created!",
-        description: "Your post has been shared successfully.",
+        title: "Post utworzony!",
+        description: "Twój post został udostępniony.",
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create post",
+        title: "Błąd",
+        description: error.message || "Nie udało się utworzyć posta",
         variant: "destructive",
       });
     } finally {
@@ -462,8 +462,8 @@ export const CreatePostModal = ({
               >
                 <span className="flex items-center space-x-2 cursor-pointer">
                   <Image className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Add Photo</span>
-                  <span className="sm:hidden">Photo</span>
+                  <span className="hidden sm:inline">Dodaj zdjęcie</span>
+                  <span className="sm:hidden">Zdjęcie</span>
                 </span>
               </Button>
             </label>

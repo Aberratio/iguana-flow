@@ -15,18 +15,17 @@ const PaymentCancelled = () => {
             <XCircle className="w-8 h-8 text-red-400" />
           </div>
           <CardTitle className="text-white text-2xl">
-            Payment Cancelled
+            Płatność anulowana
           </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-6">
           <div className="text-muted-foreground">
             <p>
-              Your payment was cancelled. No charges have been made to your
-              account.
+              Płatność została anulowana. Nie zostały pobrane żadne środki z Twojego konta.
             </p>
             <p className="mt-2">
-              You can try again at any time to unlock premium features.
+              Możesz spróbować ponownie w dowolnym momencie, aby odblokować funkcje premium.
             </p>
           </div>
 
@@ -37,7 +36,7 @@ const PaymentCancelled = () => {
               className="w-full border-white/20 text-white hover:bg-white/10"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
+              Wróć
             </Button>
 
             <Button
@@ -45,7 +44,7 @@ const PaymentCancelled = () => {
               variant="primary"
               className="w-full"
             >
-              View Pricing Again
+              Zobacz plany cenowe
             </Button>
 
             <Button
@@ -53,7 +52,7 @@ const PaymentCancelled = () => {
               onClick={() => navigate("/feed")}
               className="w-full text-muted-foreground hover:text-white"
             >
-              Continue to Feed
+              Przejdź do feed'u
             </Button>
           </div>
         </CardContent>
