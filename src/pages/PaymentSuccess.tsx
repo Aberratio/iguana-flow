@@ -49,15 +49,15 @@ const PaymentSuccess = () => {
         setVerified(true);
 
         toast({
-          title: "Payment Successful!",
-          description: "Your premium subscription is now active!",
+          title: "Płatność zakończona sukcesem!",
+          description: "Twoja subskrypcja premium jest teraz aktywna!",
         });
       } catch (error) {
         console.error("Error verifying payment:", error);
         toast({
-          title: "Verification Error",
+          title: "Błąd weryfikacji",
           description:
-            "Payment successful but verification failed. Your account will be updated shortly.",
+            "Płatność powiodła się, ale weryfikacja nie zakończyła się poprawnie. Twoje konto zostanie zaktualizowane wkrótce.",
           variant: "default",
         });
       } finally {
@@ -80,7 +80,7 @@ const PaymentSuccess = () => {
             )}
           </div>
           <CardTitle className="text-white text-2xl">
-            {isVerifying ? "Verifying Payment..." : "Payment Successful!"}
+            {isVerifying ? "Weryfikacja płatności..." : "Płatność zakończona sukcesem!"}
           </CardTitle>
         </CardHeader>
 
@@ -88,27 +88,24 @@ const PaymentSuccess = () => {
           <div className="text-muted-foreground">
             {isVerifying ? (
               <p>
-                Please wait while we verify your payment and update your
-                account...
+                Proszę czekać, weryfikujemy płatność i aktualizujemy Twoje konto...
               </p>
             ) : verified ? (
               <div className="space-y-2">
                 <p>
-                  Thank you for your payment! Your account has been updated with
-                  premium access.
+                  Dziękujemy za płatność! Twoje konto zostało zaktualizowane z dostępem premium.
                 </p>
                 <div className="flex items-center justify-center gap-2 text-yellow-400">
                   <Crown className="w-5 h-5" />
                   <span className="font-semibold">
-                    Premium Access Activated
+                    Dostęp Premium aktywowany
                   </span>
                 </div>
               </div>
             ) : (
               <p>
-                Your payment was successful. If you don't see your premium
-                features immediately, they will be activated within a few
-                minutes.
+                Płatność zakończona sukcesem. Jeśli nie widzisz funkcji premium od razu,
+                zostaną one aktywowane w ciągu kilku minut.
               </p>
             )}
           </div>
@@ -118,7 +115,7 @@ const PaymentSuccess = () => {
               onClick={() => navigate("/profile")}
               className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 hover:from-purple-600 hover:via-pink-600 hover:to-blue-600"
             >
-              Go to Profile
+              Przejdź do profilu
             </Button>
 
             <Button
@@ -126,17 +123,17 @@ const PaymentSuccess = () => {
               onClick={() => navigate("/feed")}
               className="w-full border-white/20 text-white hover:bg-white/10"
             >
-              Continue to Feed
+              Przejdź do feed'u
             </Button>
           </div>
 
           {sessionId && (
             <div className="text-xs text-muted-foreground border-t border-white/10 pt-4">
               <p>
-                Session ID: {sessionId.substring(0, 20)}...
+                ID sesji: {sessionId.substring(0, 20)}...
                 {sessionId.substring(sessionId.length - 8)}
               </p>
-              <p>Keep this for your records</p>
+              <p>Zachowaj to na wypadek potrzeby</p>
             </div>
           )}
         </CardContent>

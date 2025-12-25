@@ -218,8 +218,8 @@ const ChallengePreview = () => {
     } catch (error) {
       console.error("Error fetching challenge details:", error);
       toast({
-        title: "Error",
-        description: "Failed to load challenge details",
+        title: "Błąd",
+        description: "Nie udało się załadować szczegółów wyzwania",
         variant: "destructive",
       });
     } finally {
@@ -275,9 +275,9 @@ const ChallengePreview = () => {
       await generateCalendar(startDate);
 
       toast({
-        title: "Success",
+        title: "Sukces",
         description:
-          "You've joined the challenge and your training schedule is ready!",
+          "Dołączyłeś(aś) do wyzwania i Twój harmonogram treningowy jest gotowy!",
       });
 
       setTimeout(() => {
@@ -286,8 +286,8 @@ const ChallengePreview = () => {
     } catch (error) {
       console.error("Error joining challenge:", error);
       toast({
-        title: "Error",
-        description: "Failed to join challenge",
+        title: "Błąd",
+        description: "Nie udało się dołączyć do wyzwania",
         variant: "destructive",
       });
     } finally {
@@ -384,8 +384,8 @@ const ChallengePreview = () => {
         await checkParticipation();
 
         toast({
-          title: "Rest Day Completed",
-          description: "Great job taking care of your recovery!",
+          title: "Dzień odpoczynku ukończony",
+          description: "Świetnie, że dbasz o regenerację!",
         });
 
         // Navigate to the next day or back to challenge overview
@@ -408,8 +408,8 @@ const ChallengePreview = () => {
     } catch (error) {
       console.error("Error completing rest day:", error);
       toast({
-        title: "Error",
-        description: "Failed to complete rest day",
+        title: "Błąd",
+        description: "Nie udało się ukończyć dnia odpoczynku",
         variant: "destructive",
       });
     }
@@ -446,8 +446,8 @@ const ChallengePreview = () => {
       await checkParticipation();
 
       toast({
-        title: "Day Completed (Admin Action)",
-        description: `Day ${trainingDay.day_number} marked as completed for ${user.username}`,
+        title: "Dzień ukończony (Akcja admina)",
+        description: `Dzień ${trainingDay.day_number} oznaczony jako ukończony dla ${user.username}`,
       });
 
       // Navigate to the next day
@@ -468,8 +468,8 @@ const ChallengePreview = () => {
     } catch (error) {
       console.error("Error completing day as admin:", error);
       toast({
-        title: "Error",
-        description: "Failed to complete day",
+        title: "Błąd",
+        description: "Nie udało się ukończyć dnia",
         variant: "destructive",
       });
     }

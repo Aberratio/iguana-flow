@@ -25,18 +25,18 @@ const NotFound = () => {
 
           <h1 className="text-6xl font-bold gradient-text mb-4">404</h1>
           <h2 className="text-2xl font-semibold text-white mb-4">
-            Page Not Found
+            Nie znaleziono strony
           </h2>
           <p className="text-muted-foreground mb-8">
-            Oops! The page you're looking for doesn't exist. It might have been
-            moved, deleted, or you entered the wrong URL.
+            Ups! Strona, której szukasz, nie istnieje. Mogła zostać przeniesiona,
+            usunięta lub wpisałeś(aś) nieprawidłowy adres.
           </p>
 
           <div className="space-y-3">
             <Button asChild variant="primary" className="w-full">
               <Link to="/feed">
                 <Home className="w-4 h-4 mr-2" />
-                Go Home
+                Strona główna
               </Link>
             </Button>
 
@@ -47,19 +47,19 @@ const NotFound = () => {
             >
               <Link to={-1 as any}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Go Back
+                Wróć
               </Link>
             </Button>
           </div>
 
           <div className="mt-8 pt-6 border-t border-white/10">
             <p className="text-muted-foreground text-sm">
-              If you believe this is an error, please{" "}
+              Jeśli uważasz, że to błąd,{" "}
               <Link
-                to="/inbox"
+                to="/about-us"
                 className="text-purple-400 hover:text-purple-300"
               >
-                contact support
+                skontaktuj się z nami
               </Link>
               .
             </p>

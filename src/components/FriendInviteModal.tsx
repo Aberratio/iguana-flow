@@ -108,8 +108,8 @@ export const FriendInviteModal = ({
 
       if (existingRelationship) {
         toast({
-          title: "Cannot send request",
-          description: "A friendship or request already exists with this user.",
+          title: "Nie można wysłać zaproszenia",
+          description: "Znajomość lub zaproszenie już istnieje z tym użytkownikiem.",
           variant: "destructive",
         });
         return;
@@ -128,8 +128,8 @@ export const FriendInviteModal = ({
         // Handle specific constraint violation
         if (friendshipError.code === '23505') {
           toast({
-            title: "Request already exists",
-            description: "A friendship or request already exists with this user.",
+            title: "Zaproszenie już istnieje",
+            description: "Znajomość lub zaproszenie już istnieje z tym użytkownikiem.",
             variant: "destructive",
           });
           return;
@@ -159,14 +159,14 @@ export const FriendInviteModal = ({
       // Refresh the suggested friends to update the UI
       fetchSuggestedFriends();
       toast({
-        title: "Friend request sent!",
-        description: `Your friend request has been sent to ${username}.`,
+        title: "Zaproszenie wysłane!",
+        description: `Twoje zaproszenie zostało wysłane do ${username}.`,
       });
     } catch (error) {
       console.error("Error sending friend request:", error);
       toast({
-        title: "Error",
-        description: "Failed to send friend request. Please try again.",
+        title: "Błąd",
+        description: "Nie udało się wysłać zaproszenia. Spróbuj ponownie.",
         variant: "destructive",
       });
     }
@@ -182,14 +182,14 @@ export const FriendInviteModal = ({
         overflow-y-auto glass-effect border-white/10
       `}>
         <DialogHeader className={isMobile ? "pb-4" : ""}>
-          <DialogTitle className="text-white text-lg sm:text-xl">Find Friends</DialogTitle>
+          <DialogTitle className="text-white text-lg sm:text-xl">Znajdź znajomych</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search for friends..."
+              placeholder="Szukaj znajomych..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`
@@ -202,21 +202,21 @@ export const FriendInviteModal = ({
           <div className={`space-y-3 ${isMobile ? 'max-h-[calc(100vh-180px)]' : 'max-h-96'} overflow-y-auto`}>
             <h3 className="text-sm font-medium text-muted-foreground">
               {searchQuery
-                ? `Search results for "${searchQuery}"`
-                : "Suggested for you"}
+                ? `Wyniki wyszukiwania dla "${searchQuery}"`
+                : "Sugerowani dla Ciebie"}
             </h3>
 
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-muted-foreground mt-2">Loading...</p>
+                <p className="text-muted-foreground mt-2">Ładowanie...</p>
               </div>
             ) : suggestedFriends.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p className="text-sm sm:text-base">
                   {searchQuery
-                    ? `No users found matching "${searchQuery}"`
-                    : "No users to suggest at the moment"}
+                    ? `Nie znaleziono użytkowników pasujących do "${searchQuery}"`
+                    : "Brak sugerowanych użytkowników w tej chwili"}
                 </p>
               </div>
             ) : (
@@ -277,7 +277,7 @@ export const FriendInviteModal = ({
                       `}>
                         <Check className="w-4 h-4" />
                         <span className={`whitespace-nowrap ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                          Sent
+                          Wysłano
                         </span>
                       </div>
                     ) : (
@@ -295,7 +295,7 @@ export const FriendInviteModal = ({
                       >
                         <UserPlus className="w-4 h-4 mr-1" />
                         <span className={isMobile ? "text-xs" : "text-sm"}>
-                          {isMobile ? "Add" : "Add Friend"}
+                          {isMobile ? "Dodaj" : "Dodaj znajomego"}
                         </span>
                       </Button>
                     )}

@@ -29,26 +29,26 @@ const Inbox = () => {
     const targetUser = activity.target_user;
     switch (activity.activity_type) {
       case 'like':
-        return `${targetUser?.username || 'Someone'} liked your post`;
+        return `${targetUser?.username || 'Ktoś'} polubił(a) Twój post`;
       case 'comment':
-        return `${targetUser?.username || 'Someone'} commented on your post: "${data.content?.substring(0, 50) || ''}..."`;
+        return `${targetUser?.username || 'Ktoś'} skomentował(a) Twój post: "${data.content?.substring(0, 50) || ''}..."`;
       case 'follow':
       case 'new_follower':
-        return `${activity.activity_data?.follower_username || 'Someone'} started following you`;
+        return `${activity.activity_data?.follower_username || 'Ktoś'} zaczął(ęła) Cię obserwować`;
       case 'friend_request':
-        return `${activity.activity_data?.requester_username || 'Someone'} sent you a friend request`;
+        return `${activity.activity_data?.requester_username || 'Ktoś'} wysłał(a) Ci zaproszenie do znajomych`;
       case 'friend_request_accepted':
-        return `${activity.activity_data?.accepter_username || 'Someone'} accepted your friend request`;
+        return `${activity.activity_data?.accepter_username || 'Ktoś'} zaakceptował(a) Twoje zaproszenie`;
       case 'post_created':
-        return 'You created a new post (+10 points)';
+        return 'Utworzyłeś(aś) nowy post (+10 pkt)';
       case 'challenge_day_completed':
-        return `You completed a challenge day (+25 points)`;
+        return `Ukończyłeś(aś) dzień wyzwania (+25 pkt)`;
       case 'figure_completed':
-        return `You mastered a new figure (+15 points)`;
+        return `Opanowałeś(aś) nową figurę (+15 pkt)`;
       case 'training_completed':
-        return `You completed a training session (+20 points)`;
+        return `Ukończyłeś(aś) trening (+20 pkt)`;
       default:
-        return 'New activity';
+        return 'Nowa aktywność';
     }
   };
 
@@ -127,16 +127,16 @@ const Inbox = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white">Notifications</h2>
+      <h2 className="text-xl font-bold text-white">Powiadomienia</h2>
 
       {/* Filter Tabs - Hidden on mobile, show only "All" */}
       <div className="hidden md:flex space-x-1 bg-white/5 rounded-lg p-1">
         {[
-          { id: 'all', label: 'All' },
-          { id: 'likes', label: 'Likes' },
-          { id: 'comments', label: 'Comments' },
-          { id: 'friends', label: 'Friends' },
-          { id: 'followers', label: 'Followers' }
+          { id: 'all', label: 'Wszystkie' },
+          { id: 'likes', label: 'Polubienia' },
+          { id: 'comments', label: 'Komentarze' },
+          { id: 'friends', label: 'Znajomi' },
+          { id: 'followers', label: 'Obserwujący' }
         ].map(tab => (
           <Button 
             key={tab.id}
@@ -158,7 +158,7 @@ const Inbox = () => {
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-muted-foreground mt-2">Loading activities...</p>
+            <p className="text-muted-foreground mt-2">Ładowanie aktywności...</p>
           </div>
         ) : (
           filteredActivities.map(activity => (
@@ -219,8 +219,13 @@ const Inbox = () => {
 
       {filteredActivities.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-muted-foreground text-lg">No activities found</div>
-          <div className="text-muted-foreground text-sm">Check back later for updates!</div>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+            <Heart className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <div className="text-muted-foreground text-lg">Brak powiadomień</div>
+          <div className="text-muted-foreground text-sm mt-1">
+            💡 Wskazówka: Polub posty innych, komentuj i dodawaj znajomych, aby otrzymywać powiadomienia!
+          </div>
         </div>
       )}
     </div>
