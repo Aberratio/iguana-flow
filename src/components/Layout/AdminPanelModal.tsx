@@ -47,13 +47,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LayoutDashboard className="w-5 h-5" />
-            Admin Panel
+            Panel Administratora
           </DialogTitle>
         </DialogHeader>
 
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="content">
-            <AccordionTrigger>📝 Content Management</AccordionTrigger>
+            <AccordionTrigger>📝 Zarządzanie treścią</AccordionTrigger>
             <AccordionContent className="space-y-2">
               <Link to="/admin/landing-page" onClick={handleLinkClick}>
                 <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
@@ -61,8 +61,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <div className="flex items-center gap-3">
                       <Globe className="w-5 h-5 text-primary" />
                       <div>
-                        <CardTitle className="text-sm">Landing Page Editor</CardTitle>
-                        <CardDescription className="text-xs">Edit homepage content</CardDescription>
+                        <CardTitle className="text-sm">Edytor strony głównej</CardTitle>
+                        <CardDescription className="text-xs">Edytuj zawartość strony głównej</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
@@ -75,8 +75,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <div className="flex items-center gap-3">
                       <Trophy className="w-5 h-5 text-primary" />
                       <div>
-                        <CardTitle className="text-sm">Achievements</CardTitle>
-                        <CardDescription className="text-xs">Manage user achievements</CardDescription>
+                        <CardTitle className="text-sm">Osiągnięcia</CardTitle>
+                        <CardDescription className="text-xs">Zarządzaj osiągnięciami użytkowników</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
@@ -89,8 +89,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <div className="flex items-center gap-3">
                       <GraduationCap className="w-5 h-5 text-primary" />
                       <div>
-                        <CardTitle className="text-sm">Training Management</CardTitle>
-                        <CardDescription className="text-xs">Create & edit training</CardDescription>
+                        <CardTitle className="text-sm">Zarządzanie treningami</CardTitle>
+                        <CardDescription className="text-xs">Twórz i edytuj treningi</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
@@ -100,7 +100,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           </AccordionItem>
 
           <AccordionItem value="users">
-            <AccordionTrigger>👥 User Management</AccordionTrigger>
+            <AccordionTrigger>👥 Zarządzanie użytkownikami</AccordionTrigger>
             <AccordionContent className="space-y-2">
               <Link to="/admin/user-management" onClick={handleLinkClick}>
                 <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
@@ -108,8 +108,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <div className="flex items-center gap-3">
                       <Users className="w-5 h-5 text-primary" />
                       <div>
-                        <CardTitle className="text-sm">User Roles</CardTitle>
-                        <CardDescription className="text-xs">Manage user permissions</CardDescription>
+                        <CardTitle className="text-sm">Role użytkowników</CardTitle>
+                        <CardDescription className="text-xs">Zarządzaj uprawnieniami użytkowników</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
@@ -127,8 +127,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   <div className="flex items-center gap-3">
                     <UserCheck className="w-5 h-5 text-primary" />
                     <div>
-                      <CardTitle className="text-sm">Impersonate User</CardTitle>
-                      <CardDescription className="text-xs">View as another user</CardDescription>
+                      <CardTitle className="text-sm">Podszywanie się</CardTitle>
+                      <CardDescription className="text-xs">Przeglądaj jako inny użytkownik</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -145,8 +145,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <div className="flex items-center gap-3">
                       <Ticket className="w-5 h-5 text-primary" />
                       <div>
-                        <CardTitle className="text-sm">Redemption Codes</CardTitle>
-                        <CardDescription className="text-xs">Manage promo codes</CardDescription>
+                        <CardTitle className="text-sm">Kody promocyjne</CardTitle>
+                        <CardDescription className="text-xs">Zarządzaj kodami promocyjnymi</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
@@ -159,8 +159,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <div className="flex items-center gap-3">
                       <Settings className="w-5 h-5 text-primary" />
                       <div>
-                        <CardTitle className="text-sm">Site Settings</CardTitle>
-                        <CardDescription className="text-xs">Configure site options</CardDescription>
+                        <CardTitle className="text-sm">Ustawienia strony</CardTitle>
+                        <CardDescription className="text-xs">Konfiguruj opcje strony</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
