@@ -95,12 +95,10 @@ serve(async (req) => {
         cancel_url: `${origin}/payment-cancelled`,
       };
 
-      // Add payment method types for PLN currency (Revolut Pay for subscriptions, BLIK not supported)
-      if (currency === 'pln') {
-        sessionConfig.payment_method_types = ['card'];
-      }
+      // Use automatic payment methods - Stripe will automatically offer available payment options
+      sessionConfig.automatic_payment_methods = { enabled: true };
 
-      logStep("Creating subscription session", { currency, amount, paymentMethods: sessionConfig.payment_method_types });
+      logStep("Creating subscription session", { currency, amount });
       try {
         session = await stripe.checkout.sessions.create(sessionConfig);
         logStep("Subscription session created successfully", { sessionId: session.id });
@@ -146,13 +144,10 @@ serve(async (req) => {
         cancel_url: `${origin}/payment-cancelled`,
       };
 
-      // Add payment method types for PLN currency to enable BLIK and Revolut Pay
-      if (currency === 'pln') {
-        sessionConfig.payment_method_types = ['card', 'blik'];
-        logStep("PLN currency detected for challenge payment, adding BLIK and Revolut Pay payment methods");
-      }
+      // Use automatic payment methods - Stripe will automatically offer available payment options
+      sessionConfig.automatic_payment_methods = { enabled: true };
 
-      logStep("Creating challenge payment session", { currency, amount, paymentMethods: sessionConfig.payment_method_types });
+      logStep("Creating challenge payment session", { currency, amount });
       try {
         session = await stripe.checkout.sessions.create(sessionConfig);
         logStep("Challenge payment session created successfully", { sessionId: session.id });
