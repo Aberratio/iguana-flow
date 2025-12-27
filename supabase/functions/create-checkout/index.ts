@@ -76,6 +76,7 @@ serve(async (req) => {
       const sessionConfig: any = {
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
+        payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
@@ -94,9 +95,6 @@ serve(async (req) => {
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/payment-cancelled`,
       };
-
-      // Use automatic payment methods - Stripe will automatically offer available payment options
-      sessionConfig.automatic_payment_methods = { enabled: true };
 
       logStep("Creating subscription session", { currency, amount });
       try {
@@ -129,6 +127,7 @@ serve(async (req) => {
       const sessionConfig: any = {
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
+        payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
@@ -143,9 +142,6 @@ serve(async (req) => {
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/payment-cancelled`,
       };
-
-      // Use automatic payment methods - Stripe will automatically offer available payment options
-      sessionConfig.automatic_payment_methods = { enabled: true };
 
       logStep("Creating challenge payment session", { currency, amount });
       try {
