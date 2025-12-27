@@ -122,7 +122,7 @@ serve(async (req) => {
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
