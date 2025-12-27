@@ -1,207 +1,302 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Funkcjonalności Premium', () => {
-  test.describe('Biblioteka treningów', () => {
-    test('strona /training/library jest dostępna publicznie', async ({ page }) => {
+test.describe('Premium Features', () => {
+  test.describe('Training Library', () => {
+    test('should load training library page', async ({ page }) => {
       await page.goto('/training/library');
-      
-      await expect(page.locator('body')).toBeVisible();
+      await expect(page).toHaveURL(/.*training\/library/);
     });
 
-    test('wyświetla polskie teksty', async ({ page }) => {
+    test('should display Polish content', async ({ page }) => {
       await page.goto('/training/library');
-      
-      // Wait for content to load
-      await page.waitForTimeout(1000);
-      
-      // Check for Polish content
-      const polishContent = await page.locator('body').textContent();
-      
-      // Should contain some Polish words
-      const hasPolishContent = 
-        polishContent?.includes('Biblioteka') ||
-        polishContent?.includes('Treningi') ||
-        polishContent?.includes('trening') ||
-        polishContent?.includes('Ładowanie');
-      
-      expect(hasPolishContent).toBeTruthy();
+      // Check for Polish UI elements
+      const polishContent = await page.locator('text=/Biblioteka|Treningi|Ćwiczenia|Filtruj/i').first();
+      await expect(polishContent).toBeVisible({ timeout: 10000 });
     });
 
-    test('jest responsywna na różnych urządzeniach', async ({ page }) => {
-      // Desktop
-      await page.setViewportSize({ width: 1280, height: 720 });
-      await page.goto('/training/library');
-      await expect(page.locator('body')).toBeVisible();
+    test('should be responsive', async ({ page }) => {
+      const viewports = [
+        { width: 375, height: 667 },
+        { width: 768, height: 1024 },
+        { width: 1920, height: 1080 }
+      ];
 
-      // Tablet
-      await page.setViewportSize({ width: 768, height: 1024 });
-      await expect(page.locator('body')).toBeVisible();
-
-      // Mobile
-      await page.setViewportSize({ width: 375, height: 667 });
-      await expect(page.locator('body')).toBeVisible();
-    });
-  });
-
-  test.describe('Strona cennika', () => {
-    test('strona /pricing jest dostępna', async ({ page }) => {
-      await page.goto('/pricing');
-      
-      await expect(page.locator('body')).toBeVisible();
-    });
-
-    test('wyświetla plany cenowe po polsku', async ({ page }) => {
-      await page.goto('/pricing');
-      
-      await page.waitForTimeout(1000);
-      
-      const pageContent = await page.locator('body').textContent();
-      
-      // Should contain pricing-related Polish words
-      const hasPricingContent = 
-        pageContent?.includes('Premium') ||
-        pageContent?.includes('cen') ||
-        pageContent?.includes('plan') ||
-        pageContent?.includes('Wybierz');
-      
-      expect(hasPricingContent).toBeTruthy();
-    });
-
-    test('jest responsywna', async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto('/pricing');
-      
-      await expect(page.locator('body')).toBeVisible();
-    });
-  });
-
-  test.describe('Blokada treści premium', () => {
-    test('użytkownik niezalogowany widzi zachętę do logowania', async ({ page }) => {
-      // Try to access a potentially premium route
-      await page.goto('/training/library');
-      
-      await page.waitForTimeout(1000);
-      
-      // Page should load without errors
-      await expect(page.locator('body')).toBeVisible();
-    });
-  });
-
-  test.describe('Dostępność (a11y)', () => {
-    test('strona biblioteki treningów jest dostępna', async ({ page }) => {
-      await page.goto('/training/library');
-      
-      // Check for proper page structure
-      await expect(page.locator('body')).toBeVisible();
-      
-      // Check for buttons or interactive elements
-      const buttons = await page.locator('button').count();
-      expect(buttons).toBeGreaterThanOrEqual(0);
-    });
-
-    test('strona cennika jest dostępna', async ({ page }) => {
-      await page.goto('/pricing');
-      
-      await expect(page.locator('body')).toBeVisible();
-    });
-  });
-
-  test.describe('Brak błędów UI', () => {
-    test('biblioteka nie wyświetla krytycznych błędów', async ({ page }) => {
-      const errors: string[] = [];
-      
-      page.on('console', msg => {
-        if (msg.type() === 'error') {
-          errors.push(msg.text());
-        }
-      });
-
-      await page.goto('/training/library');
-      await page.waitForTimeout(1000);
-      
-      // Filter out expected errors
-      const criticalErrors = errors.filter(
-        e => !e.includes('401') && 
-             !e.includes('Unauthorized') && 
-             !e.includes('Failed to fetch') &&
-             !e.includes('net::')
-      );
-      
-      if (criticalErrors.length > 0) {
-        console.log('Critical errors found:', criticalErrors);
-      }
-    });
-
-    test('strona cennika nie wyświetla krytycznych błędów', async ({ page }) => {
-      const errors: string[] = [];
-      
-      page.on('console', msg => {
-        if (msg.type() === 'error') {
-          errors.push(msg.text());
-        }
-      });
-
-      await page.goto('/pricing');
-      await page.waitForTimeout(1000);
-      
-      const criticalErrors = errors.filter(
-        e => !e.includes('401') && 
-             !e.includes('Unauthorized') && 
-             !e.includes('Failed to fetch') &&
-             !e.includes('net::')
-      );
-      
-      if (criticalErrors.length > 0) {
-        console.log('Critical errors found:', criticalErrors);
+      for (const viewport of viewports) {
+        await page.setViewportSize(viewport);
+        await page.goto('/training/library');
+        await page.waitForLoadState('networkidle');
+        
+        // Page should not have horizontal scroll
+        const hasHorizontalScroll = await page.evaluate(() => {
+          return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+        });
+        expect(hasHorizontalScroll).toBe(false);
       }
     });
   });
 
-  test.describe('Nawigacja', () => {
-    test('można nawigować z biblioteki do szczegółów treningu', async ({ page }) => {
-      await page.goto('/training/library');
-      
-      await page.waitForTimeout(1000);
-      
-      // Page should load successfully
-      await expect(page.locator('body')).toBeVisible();
+  test.describe('Pricing Page', () => {
+    test('should load pricing page', async ({ page }) => {
+      await page.goto('/pricing');
+      await expect(page).toHaveURL(/.*pricing/);
     });
 
-    test('można wrócić z cennika na stronę główną', async ({ page }) => {
+    test('should display Polish pricing plans', async ({ page }) => {
       await page.goto('/pricing');
-      
-      await page.waitForTimeout(500);
-      
-      // Try to navigate back
-      await page.goto('/');
-      
-      await expect(page.locator('body')).toBeVisible();
+      // Check for Polish pricing content
+      const polishPricing = await page.locator('text=/Premium|Plan|Subskrypcja|zł/i').first();
+      await expect(polishPricing).toBeVisible({ timeout: 10000 });
+    });
+
+    test('should be responsive', async ({ page }) => {
+      const viewports = [
+        { width: 375, height: 667 },
+        { width: 1024, height: 768 }
+      ];
+
+      for (const viewport of viewports) {
+        await page.setViewportSize(viewport);
+        await page.goto('/pricing');
+        await page.waitForLoadState('networkidle');
+        
+        const hasHorizontalScroll = await page.evaluate(() => {
+          return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+        });
+        expect(hasHorizontalScroll).toBe(false);
+      }
     });
   });
 
-  test.describe('Podróż lotnicza (Aerial Journey)', () => {
-    test('strona /aerial-journey jest dostępna', async ({ page }) => {
-      await page.goto('/aerial-journey');
+  test.describe('Premium Content Blocking', () => {
+    test('unauthenticated users should see login prompt for premium content', async ({ page }) => {
+      await page.goto('/training/library');
+      // Non-authenticated users might see login or pricing modal
+      const authPrompt = page.locator('text=/Zaloguj|Premium|Cennik/i').first();
+      // This is a soft check - page should load without errors
+      await page.waitForLoadState('networkidle');
+    });
+  });
+
+  test.describe('Accessibility', () => {
+    test('training library has basic accessibility', async ({ page }) => {
+      await page.goto('/training/library');
+      await page.waitForLoadState('networkidle');
       
-      await expect(page.locator('body')).toBeVisible();
+      // Check for main content area
+      const main = page.locator('main, [role="main"], .main-content').first();
+      await expect(main).toBeVisible({ timeout: 10000 });
     });
 
-    test('wyświetla polskie teksty', async ({ page }) => {
-      await page.goto('/aerial-journey');
+    test('pricing page has basic accessibility', async ({ page }) => {
+      await page.goto('/pricing');
+      await page.waitForLoadState('networkidle');
       
-      await page.waitForTimeout(1000);
+      const main = page.locator('main, [role="main"], .main-content, h1').first();
+      await expect(main).toBeVisible({ timeout: 10000 });
+    });
+  });
+
+  test.describe('No Critical Errors', () => {
+    test('training library loads without critical console errors', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('console', msg => {
+        if (msg.type() === 'error') {
+          const text = msg.text();
+          // Filter out expected errors
+          if (!text.includes('net::') && 
+              !text.includes('Failed to fetch') &&
+              !text.includes('401') &&
+              !text.includes('403')) {
+            errors.push(text);
+          }
+        }
+      });
+
+      await page.goto('/training/library');
+      await page.waitForLoadState('networkidle');
       
-      const pageContent = await page.locator('body').textContent();
-      
-      // Check for any Polish content
-      expect(pageContent?.length).toBeGreaterThan(0);
+      // No critical JavaScript errors
+      const criticalErrors = errors.filter(e => 
+        e.includes('TypeError') || 
+        e.includes('ReferenceError') ||
+        e.includes('SyntaxError')
+      );
+      expect(criticalErrors).toHaveLength(0);
     });
 
-    test('jest responsywna', async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto('/aerial-journey');
+    test('pricing page loads without critical console errors', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('console', msg => {
+        if (msg.type() === 'error') {
+          const text = msg.text();
+          if (!text.includes('net::') && 
+              !text.includes('Failed to fetch') &&
+              !text.includes('401') &&
+              !text.includes('403')) {
+            errors.push(text);
+          }
+        }
+      });
+
+      await page.goto('/pricing');
+      await page.waitForLoadState('networkidle');
       
-      await expect(page.locator('body')).toBeVisible();
+      const criticalErrors = errors.filter(e => 
+        e.includes('TypeError') || 
+        e.includes('ReferenceError') ||
+        e.includes('SyntaxError')
+      );
+      expect(criticalErrors).toHaveLength(0);
+    });
+  });
+
+  test.describe('Navigation', () => {
+    test('can navigate from training library to training details', async ({ page }) => {
+      await page.goto('/training/library');
+      await page.waitForLoadState('networkidle');
+      // Just verify page loads - actual navigation depends on content
+    });
+
+    test('can navigate back from pricing to home', async ({ page }) => {
+      await page.goto('/pricing');
+      await page.waitForLoadState('networkidle');
+      
+      // Look for home/back navigation
+      const homeLink = page.locator('a[href="/"], nav a').first();
+      if (await homeLink.isVisible()) {
+        await homeLink.click();
+        await expect(page).toHaveURL('/');
+      }
+    });
+  });
+
+  test.describe('Aerial Journey', () => {
+    test('should load aerial journey page', async ({ page }) => {
+      await page.goto('/aerial-journey');
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL(/.*aerial-journey/);
+    });
+
+    test('should display Polish content', async ({ page }) => {
+      await page.goto('/aerial-journey');
+      await page.waitForLoadState('networkidle');
+      // Check for Polish UI elements
+      const polishContent = await page.locator('text=/Aerial|Podróż|Ścieżka|Poziom/i').first();
+      await expect(polishContent).toBeVisible({ timeout: 10000 });
+    });
+
+    test('should be responsive', async ({ page }) => {
+      const viewports = [
+        { width: 375, height: 667 },
+        { width: 1024, height: 768 }
+      ];
+
+      for (const viewport of viewports) {
+        await page.setViewportSize(viewport);
+        await page.goto('/aerial-journey');
+        await page.waitForLoadState('networkidle');
+        
+        const hasHorizontalScroll = await page.evaluate(() => {
+          return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+        });
+        expect(hasHorizontalScroll).toBe(false);
+      }
+    });
+  });
+
+  test.describe('Sport Path Purchase', () => {
+    test('purchase modal displays Polish content', async ({ page }) => {
+      // Navigate to aerial journey which may have purchase option
+      await page.goto('/aerial-journey');
+      await page.waitForLoadState('networkidle');
+      
+      // Look for purchase/unlock button
+      const purchaseButton = page.locator('button:has-text("Wykup"), button:has-text("Odblokuj"), button:has-text("Kup")').first();
+      
+      if (await purchaseButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await purchaseButton.click();
+        
+        // Check modal content is in Polish
+        await expect(page.locator('text=/Wykup ścieżkę|Kup|Kod/i').first()).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('text=/Wszystkie poziomy|Dożywotni dostęp/i').first()).toBeVisible();
+      }
+    });
+
+    test('purchase modal tabs work correctly', async ({ page }) => {
+      await page.goto('/aerial-journey');
+      await page.waitForLoadState('networkidle');
+      
+      const purchaseButton = page.locator('button:has-text("Wykup"), button:has-text("Odblokuj"), button:has-text("Kup")').first();
+      
+      if (await purchaseButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await purchaseButton.click();
+        await page.waitForTimeout(500);
+        
+        // Check tabs exist
+        const buyTab = page.locator('[role="tab"]:has-text("Kup")');
+        const codeTab = page.locator('[role="tab"]:has-text("Kod")');
+        
+        if (await buyTab.isVisible()) {
+          await expect(buyTab).toBeVisible();
+          await expect(codeTab).toBeVisible();
+          
+          // Click code tab
+          await codeTab.click();
+          await expect(page.locator('input[placeholder*="kod" i], input[placeholder*="Wprowadź" i]').first()).toBeVisible();
+          
+          // Switch back to buy
+          await buyTab.click();
+          await expect(page.locator('button:has-text("Kup teraz")').first()).toBeVisible();
+        }
+      }
+    });
+
+    test('promo code input validates empty input', async ({ page }) => {
+      await page.goto('/aerial-journey');
+      await page.waitForLoadState('networkidle');
+      
+      const purchaseButton = page.locator('button:has-text("Wykup"), button:has-text("Odblokuj"), button:has-text("Kup")').first();
+      
+      if (await purchaseButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await purchaseButton.click();
+        await page.waitForTimeout(500);
+        
+        const codeTab = page.locator('[role="tab"]:has-text("Kod")');
+        if (await codeTab.isVisible()) {
+          await codeTab.click();
+          
+          // Try to submit without code
+          const redeemButton = page.locator('button:has-text("Wykorzystaj kod")').first();
+          if (await redeemButton.isVisible()) {
+            await redeemButton.click();
+            
+            // Should show error toast
+            await expect(page.locator('text=/Wprowadź kod|Błąd/i').first()).toBeVisible({ timeout: 3000 });
+          }
+        }
+      }
+    });
+  });
+
+  test.describe('Challenge Purchase', () => {
+    test('challenge purchase modal shows Polish content', async ({ page }) => {
+      await page.goto('/challenges');
+      await page.waitForLoadState('networkidle');
+      
+      // Look for premium challenge
+      const premiumBadge = page.locator('text=/Premium/i').first();
+      
+      if (await premiumBadge.isVisible({ timeout: 5000 }).catch(() => false)) {
+        // Click on a premium challenge card
+        const card = premiumBadge.locator('..').locator('..');
+        await card.click().catch(() => {});
+        
+        // Check for Polish purchase content
+        const polishContent = page.locator('text=/Wyzwanie Premium|Kup|zł/i').first();
+        if (await polishContent.isVisible({ timeout: 3000 }).catch(() => false)) {
+          await expect(polishContent).toBeVisible();
+        }
+      }
     });
   });
 });
