@@ -488,6 +488,14 @@ const ChallengePreview = () => {
   };
 
   const handleExerciseClick = (exercise: any) => {
+    if (!exercise.figure) {
+      toast({
+        title: "Błąd",
+        description: "Nie można wyświetlić szczegółów ćwiczenia",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedFigure({
       id: exercise.figure.id,
       name: exercise.figure.name,
@@ -924,10 +932,10 @@ const ChallengePreview = () => {
                                       <div
                                         key={exercise.id}
                                         onClick={() =>
-                                          handleExerciseClick(exercise)
+                                          exercise.figure && handleExerciseClick(exercise)
                                         }
                                         className={`flex items-start justify-between p-3 md:p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm ${
-                                          actualIsLocked
+                                          actualIsLocked || !exercise.figure
                                             ? "cursor-not-allowed"
                                             : "cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all"
                                         }`}
@@ -940,7 +948,7 @@ const ChallengePreview = () => {
                                                 : "text-white"
                                             }`}
                                           >
-                                            {exercise.figure.name}
+                                            {exercise.figure?.name || 'Nieznane ćwiczenie'}
                                           </h4>
                                           {exercise.notes && (
                                             <p className="text-white/70 text-sm mb-3">
@@ -972,7 +980,7 @@ const ChallengePreview = () => {
                                           {exercise.figure?.image_url ? (
                                             <img
                                               src={exercise.figure.image_url}
-                                              alt={exercise.figure.name}
+                                              alt={exercise.figure?.name || 'Ćwiczenie'}
                                               className="w-full h-full object-cover"
                                             />
                                           ) : (
