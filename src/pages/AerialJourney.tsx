@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import SportSelectionModal from "@/components/SportSelectionModal";
 import SportCategoryManager from "@/components/SportCategoryManager";
 import SportPricingManager from "@/components/Admin/SportPricingManager";

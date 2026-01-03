@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useDictionary } from "@/contexts/DictionaryContext";
 import { cn } from "@/lib/utils";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 // Zod validation schema

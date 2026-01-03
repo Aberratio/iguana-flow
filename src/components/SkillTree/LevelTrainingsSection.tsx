@@ -13,7 +13,7 @@ interface LevelTrainingsSectionProps {
   levelNumber: number;
 }
 
-export default function LevelTrainingsSection({ levelId, sportCategory, isLevelUnlocked, levelNumber }: LevelTrainingsSectionProps) {
+export const LevelTrainingsSection = ({ levelId, sportCategory, isLevelUnlocked, levelNumber }: LevelTrainingsSectionProps) => {
   const navigate = useNavigate();
   const { hasPremiumAccess } = useSubscriptionStatus();
   const { levelTrainings, isTrainingCompleted, getCompletedCount, getTotalCount, isLoading } = useLevelTrainings(levelId);
@@ -102,4 +102,4 @@ export default function LevelTrainingsSection({ levelId, sportCategory, isLevelU
       </div>
     </div>
   );
-}
+};

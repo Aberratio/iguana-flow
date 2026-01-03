@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { logError } from '@/lib/errorHandler';
 import { 
   Plus, 
   Search, 
@@ -46,7 +47,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 import ChallengeStatistics from '@/components/ChallengeStatistics';
 
 interface Challenge {
@@ -129,8 +130,8 @@ const MyChallenges: React.FC = () => {
       } else {
         setChallenges([]);
       }
-    } catch (err: any) {
-      console.error('Error fetching challenges:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MyChallenges', action: 'fetchChallenges' });
       toast.error('Błąd podczas pobierania wyzwań');
     } finally {
       setIsLoading(false);
@@ -153,8 +154,8 @@ const MyChallenges: React.FC = () => {
 
       toast.success(isArchived ? 'Przywrócono wyzwanie' : 'Zarchiwizowano wyzwanie');
       fetchChallenges();
-    } catch (err: any) {
-      console.error('Error archiving challenge:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MyChallenges', action: 'archiveChallenge' });
       toast.error('Błąd podczas archiwizacji');
     } finally {
       setArchiveDialogOpen(false);
@@ -238,7 +239,7 @@ const MyChallenges: React.FC = () => {
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+          <Select value={statusFilter} onValueChange={(v: string) => setStatusFilter(v)}>
             <SelectTrigger className="w-40">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue />

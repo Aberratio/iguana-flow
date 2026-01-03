@@ -42,7 +42,7 @@ import {
   TrainingExerciseManager,
   TrainingExerciseData,
 } from '@/components/TrainingExerciseManager';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 
 // Zod schema for training validation
 const trainingSchema = z.object({

@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSpeech } from '@/hooks/useSpeech';
 import { useWakeLock } from '@/hooks/useWakeLock';
+import { logError, logWarning } from '@/lib/errorHandler';
 
 interface TrainingSession {
   id: string;
@@ -137,7 +138,7 @@ const TrainingExerciseSession = () => {
           .single();
 
         if (error) {
-          console.error('Error fetching session:', error);
+          logError(error, { component: 'TrainingExerciseSession', action: 'fetchSession' });
           throw error;
         }
 
@@ -168,8 +169,8 @@ const TrainingExerciseSession = () => {
           figures: data.figures || [],
           stretching_exercises: data.stretching_exercises || []
         });
-      } catch (error) {
-        console.error('Error fetching session:', error);
+      } catch (error: unknown) {
+        logError(error, { component: 'TrainingExerciseSession', action: 'fetchSession' });
         toast({
           title: "Błąd",
           description: "Nie udało się załadować sesji treningowej.",
@@ -211,7 +212,7 @@ const TrainingExerciseSession = () => {
         .in('name', Array.from(exerciseNames));
 
       if (error) {
-        console.error('Error fetching exercise media:', error);
+        logError(error, { component: 'TrainingExerciseSession', action: 'fetchExerciseMedia' });
         return;
       }
 
@@ -496,7 +497,7 @@ const TrainingExerciseSession = () => {
 
     if (isRunning && !isPreparingToStart) {
       videoRef.current.play().catch((err) => {
-        console.error("Error playing video:", err);
+        logError(err, { component: 'TrainingExerciseSession', action: 'playVideo' });
       });
     } else {
       videoRef.current.pause();
@@ -516,7 +517,7 @@ const TrainingExerciseSession = () => {
     if (shouldAutoPlay) {
       setTimeout(() => {
         videoRef.current?.play().catch((err) => {
-          console.error("Error auto-playing video on segment change:", err);
+          logError(err, { component: 'TrainingExerciseSession', action: 'autoPlayVideo' });
         });
       }, 100);
     }
@@ -549,7 +550,7 @@ const TrainingExerciseSession = () => {
           await element.msRequestFullscreen();
         }
       } catch (error) {
-        console.warn('Auto-fullscreen failed:', error);
+        logWarning('Auto-fullscreen failed', { component: 'TrainingExerciseSession', error });
       }
     };
 
@@ -605,7 +606,7 @@ const TrainingExerciseSession = () => {
             }
           }
         } catch (error) {
-          console.error("Error exiting fullscreen on unmount:", error);
+          logError(error, { component: 'TrainingExerciseSession', action: 'exitFullscreen' });
         }
       };
 
@@ -666,7 +667,7 @@ const TrainingExerciseSession = () => {
         }
       }
     } catch (error) {
-      console.error("Error toggling fullscreen:", error);
+      logError(error, { component: 'TrainingExerciseSession', action: 'toggleFullscreen' });
     }
   };
 
@@ -763,7 +764,7 @@ const TrainingExerciseSession = () => {
             });
 
           if (error) {
-            console.error('Error recording training completion:', error);
+            logError(error, { component: 'TrainingExerciseSession', action: 'recordCompletion' });
           } else {
             toast({
               title: "Trening ukończony!",
@@ -783,7 +784,7 @@ const TrainingExerciseSession = () => {
           return;
         }
       } catch (error) {
-        console.error('Error handling level completion:', error);
+        logError(error, { component: 'TrainingExerciseSession', action: 'handleLevelCompletion' });
       }
     }
 

@@ -1,19 +1,11 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Home, Search, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-tr from-black to-purple-950/10 flex items-center justify-center p-6">
@@ -45,7 +37,7 @@ const NotFound = () => {
               variant="outline"
               className="w-full border-white/20 text-white hover:bg-white/10"
             >
-              <Link to={-1 as any}>
+              <Link to="#" onClick={(e) => { e.preventDefault(); navigate(-1); }}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Wróć
               </Link>

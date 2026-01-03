@@ -165,4 +165,4 @@ const TrainingLibraryCard: React.FC<TrainingLibraryCardProps> = ({
   );
 };
 
-export default TrainingLibraryCard;
+export { TrainingLibraryCard };

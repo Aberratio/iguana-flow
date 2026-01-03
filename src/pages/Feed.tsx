@@ -17,7 +17,7 @@ import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { formatDistanceToNow } from 'date-fns';
 import { PricingModal } from '@/components/PricingModal';
 import { MediaContainer } from '@/components/MediaContainer';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 
 const Feed = () => {
   const navigate = useNavigate();

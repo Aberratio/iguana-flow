@@ -282,5 +282,3 @@ export const TrainingExerciseManager = ({
     </div>
   );
 };
-
-export default TrainingExerciseManager;

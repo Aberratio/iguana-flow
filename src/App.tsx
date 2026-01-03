@@ -250,14 +250,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/about"
-        element={
-          <ProtectedRoute>
-            <AboutUs />
-          </ProtectedRoute>
-        }
-      />
       <Route path="/about-us" element={<AboutUs />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-of-use" element={<TermsOfUse />} />

@@ -45,5 +45,3 @@ export const HintTooltip: React.FC<HintTooltipProps> = ({
     </TooltipProvider>
   );
 };
-
-export default HintTooltip;

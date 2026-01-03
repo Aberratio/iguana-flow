@@ -217,4 +217,4 @@ const SportPathPurchaseModal = ({
   );
 };
 
-export default SportPathPurchaseModal;
+export { SportPathPurchaseModal };
