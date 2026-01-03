@@ -97,7 +97,7 @@ interface LevelEditorSheetProps {
   onSave: () => void;
 }
 
-export default function LevelEditorSheet({ level, isOpen, onClose, sportKey, onSave }: LevelEditorSheetProps) {
+export const LevelEditorSheet = ({ level, isOpen, onClose, sportKey, onSave }: LevelEditorSheetProps) => {
   const { user } = useAuth();
   const { getDifficultyLabel } = useDictionary();
   const FILTERS_STORAGE_KEY = `level-editor-filters-${sportKey}`;
@@ -1341,4 +1341,4 @@ export default function LevelEditorSheet({ level, isOpen, onClose, sportKey, onS
       </SheetContent>
     </Sheet>
   );
-}
+};

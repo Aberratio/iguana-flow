@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { logError } from '@/lib/errorHandler';
 import { 
   Plus, 
   Search, 
@@ -38,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 
 interface Training {
   id: string;
@@ -98,8 +99,8 @@ const MyTrainings: React.FC = () => {
 
       if (error) throw error;
       setTrainings(data || []);
-    } catch (err: any) {
-      console.error('Error fetching trainings:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MyTrainings', action: 'fetchTrainings' });
       toast.error('Błąd podczas pobierania treningów');
     } finally {
       setIsLoading(false);
@@ -122,8 +123,8 @@ const MyTrainings: React.FC = () => {
 
       toast.success(isArchived ? 'Przywrócono trening' : 'Zarchiwizowano trening');
       fetchTrainings();
-    } catch (err: any) {
-      console.error('Error archiving training:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MyTrainings', action: 'archiveTraining' });
       toast.error('Błąd podczas archiwizacji');
     } finally {
       setArchiveDialogOpen(false);
@@ -187,7 +188,7 @@ const MyTrainings: React.FC = () => {
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+          <Select value={statusFilter} onValueChange={(v: string) => setStatusFilter(v)}>
             <SelectTrigger className="w-40">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue />

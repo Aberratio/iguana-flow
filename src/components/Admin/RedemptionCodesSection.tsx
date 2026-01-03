@@ -1,5 +1,4 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -26,9 +25,12 @@ interface RedemptionCode {
 }
 
 export const RedemptionCodesSection: React.FC = () => {
-  const { data: codes, isLoading } = useQuery({
-    queryKey: ['admin-sport-redemption-codes-overview'],
-    queryFn: async () => {
+  const [codes, setCodes] = useState<RedemptionCode[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchCodes = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('sport_redemption_codes')
         .select(`
@@ -41,10 +43,25 @@ export const RedemptionCodesSection: React.FC = () => {
         .limit(6);
 
       if (error) throw error;
-      return data as RedemptionCode[];
-    },
-    refetchInterval: 30000
-  });
+      setCodes(data as RedemptionCode[] || []);
+    } catch (err) {
+      console.error('Error fetching redemption codes:', err);
+      setCodes([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCodes();
+    
+    // Refetch every 30 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchCodes();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchCodes]);
 
   if (isLoading) {
     return (
@@ -76,7 +93,7 @@ export const RedemptionCodesSection: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {codes?.map((code) => {
+          {codes.map((code) => {
             const usagePercent = code.max_uses 
               ? Math.round(((code.current_uses || 0) / code.max_uses) * 100)
               : 0;
@@ -127,7 +144,7 @@ export const RedemptionCodesSection: React.FC = () => {
             );
           })}
 
-          {codes?.length === 0 && (
+          {codes.length === 0 && (
             <div className="text-center py-4 text-muted-foreground">
               Brak kodów promocyjnych
             </div>

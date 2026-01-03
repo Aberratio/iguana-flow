@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 import { cn } from "@/lib/utils";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 
 // Zod validation schema
 const courseSchema = z.object({

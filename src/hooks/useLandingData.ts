@@ -1,51 +1,36 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
+import { fetchLandingData } from '@/services/landing';
+import type { LandingData } from '@/services/landing';
 
 export const useLandingData = () => {
-  return useQuery({
-    queryKey: ['landing-all-data'],
-    queryFn: async () => {
-      const [sectionsResult, galleryResult, pricingResult] = await Promise.all([
-        supabase
-          .from('landing_page_sections')
-          .select('*')
-          .order('display_order'),
-        supabase
-          .from('gallery_media')
-          .select('*')
-          .eq('is_active', true)
-          .order('display_order')
-          .limit(12),
-        supabase
-          .from('pricing_plans')
-          .select(`
-            *,
-            pricing_plan_features (
-              feature_key,
-              is_included,
-              display_order
-            )
-          `)
-          .order('display_order'),
-      ]);
+  const [data, setData] = useState<LandingData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-      if (sectionsResult.error) throw sectionsResult.error;
-      if (galleryResult.error) throw galleryResult.error;
-      if (pricingResult.error) throw pricingResult.error;
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-      // Parse sections into easy-to-use format
-      const sections = sectionsResult.data?.reduce((acc, section) => {
-        acc[section.section_key] = section;
-        return acc;
-      }, {} as Record<string, any>);
+    try {
+      const result = await fetchLandingData();
+      setData(result);
+    } catch (err) {
+      const fetchError = err instanceof Error ? err : new Error('Unknown error');
+      setError(fetchError);
+      console.error('Error fetching landing data:', fetchError);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-      return {
-        sections,
-        gallery: galleryResult.data || [],
-        pricing: pricingResult.data || [],
-      };
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchData,
+  };
 };

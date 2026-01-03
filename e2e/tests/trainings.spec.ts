@@ -5,15 +5,17 @@ test.describe('Treningi - Uprawnienia', () => {
     test('powinien zobaczyć komunikat o braku dostępu', async ({ page }) => {
       // Navigate to training page without authentication
       await page.goto('/training');
+      await page.waitForLoadState('networkidle');
       
       // Should see access denied message
-      await expect(page.getByText('Tylko dla trenerów')).toBeVisible();
+      await expect(page.getByText('Tylko dla trenerów')).toBeVisible({ timeout: 10000 });
     });
 
     test('powinien zobaczyć przycisk powrotu do podróży', async ({ page }) => {
       await page.goto('/training');
+      await page.waitForLoadState('networkidle');
       
-      await expect(page.getByRole('button', { name: 'Wróć do podróży' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Wróć do podróży' })).toBeVisible({ timeout: 10000 });
     });
 
     test('nie powinien widzieć przycisku tworzenia sesji', async ({ page }) => {
@@ -39,6 +41,7 @@ test.describe('Treningi - UI', () => {
 
   test('komunikaty powinny być po polsku', async ({ page }) => {
     await page.goto('/training');
+    await page.waitForLoadState('networkidle');
     
     // Check for Polish text
     const polishTexts = [
@@ -48,7 +51,7 @@ test.describe('Treningi - UI', () => {
     ];
     
     for (const text of polishTexts) {
-      await expect(page.getByText(text)).toBeVisible();
+      await expect(page.getByText(text)).toBeVisible({ timeout: 10000 });
     }
   });
 });

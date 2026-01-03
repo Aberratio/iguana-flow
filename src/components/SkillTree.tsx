@@ -13,8 +13,8 @@ import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import BreadcrumbNavigation from "@/components/Layout/BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import LevelTrainingsSection from "./SkillTree/LevelTrainingsSection";
-import SportPathPurchaseModal from "./SportPathPurchaseModal";
+import { LevelTrainingsSection } from "./SkillTree/LevelTrainingsSection";
+import { SportPathPurchaseModal } from "./SportPathPurchaseModal";
 import { useSportPathAccess } from "@/hooks/useSportPathAccess";
 interface Figure {
   id: string;
@@ -1490,4 +1490,4 @@ const SkillTree = ({
       </div>
     </div>;
 };
-export default SkillTree;
+export { SkillTree };

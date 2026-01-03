@@ -21,7 +21,7 @@ import { useSportGuardian } from "@/hooks/useSportGuardian";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import LevelEditorSheet from "@/components/LevelEditorSheet";
+import { LevelEditorSheet } from "@/components/LevelEditorSheet";
 import SportDemoUsersManager from "@/components/SportDemoUsersManager";
 
 interface SportCategory {
@@ -496,4 +496,4 @@ const SportAdminPanel = ({ sportKey }: SportAdminPanelProps) => {
   );
 };
 
-export default SportAdminPanel;
+export { SportAdminPanel };

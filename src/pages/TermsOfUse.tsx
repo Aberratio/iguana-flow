@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import InfoPageLayout from "@/components/Layout/InfoPageLayout";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 
 const TermsOfUse = () => {
   const content = {

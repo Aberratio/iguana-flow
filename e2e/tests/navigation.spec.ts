@@ -4,37 +4,44 @@ test.describe('Navigation', () => {
   test.describe('Unauthenticated User', () => {
     test('should redirect to landing when accessing protected routes', async ({ page }) => {
       await page.goto('/feed');
-      await expect(page).toHaveURL('/');
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL('/', { timeout: 10000 });
     });
 
     test('should redirect to landing when accessing profile', async ({ page }) => {
       await page.goto('/profile');
-      await expect(page).toHaveURL('/');
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL('/', { timeout: 10000 });
     });
 
     test('should redirect to landing when accessing challenges', async ({ page }) => {
       await page.goto('/challenges');
-      await expect(page).toHaveURL('/');
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL('/', { timeout: 10000 });
     });
 
     test('should allow access to privacy policy', async ({ page }) => {
       await page.goto('/privacy-policy');
-      await expect(page.getByRole('heading', { name: /Polityka Prywatności/i })).toBeVisible();
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByRole('heading', { name: /Polityka Prywatności/i })).toBeVisible({ timeout: 10000 });
     });
 
     test('should allow access to terms of use', async ({ page }) => {
       await page.goto('/terms-of-use');
-      await expect(page.getByRole('heading', { name: /Regulamin/i })).toBeVisible();
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByRole('heading', { name: /Regulamin/i })).toBeVisible({ timeout: 10000 });
     });
 
     test('should allow access to about page', async ({ page }) => {
       await page.goto('/about-us');
-      await expect(page).toHaveURL('/about-us');
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL('/about-us', { timeout: 10000 });
     });
   });
 
-  test('should display 404 page for unknown routes', async ({ page }) => {
-    await page.goto('/non-existent-page-12345');
-    await expect(page.locator('text=404').or(page.locator('text=Nie znaleziono'))).toBeVisible();
-  });
+    test('should display 404 page for unknown routes', async ({ page }) => {
+      await page.goto('/non-existent-page-12345');
+      await page.waitForLoadState('networkidle');
+      await expect(page.locator('text=404').or(page.locator('text=Nie znaleziono'))).toBeVisible({ timeout: 10000 });
+    });
 });

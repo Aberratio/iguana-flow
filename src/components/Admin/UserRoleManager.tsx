@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,11 +31,14 @@ const ROLES = ['free', 'premium', 'trainer', 'admin'] as const;
 export const UserRoleManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({});
-  const queryClient = useQueryClient();
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['admin-users-roles', searchTerm],
-    queryFn: async () => {
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
       let query = supabase
         .from('profiles')
         .select('id, username, email, avatar_url, role, created_at')
@@ -49,14 +51,30 @@ export const UserRoleManager: React.FC = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as UserWithRole[];
-    },
-    refetchInterval: 30000
-  });
+      setUsers(data as UserWithRole[] || []);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm]);
 
-  const updateRoleMutation = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
-      // Update profiles table directly
+  useEffect(() => {
+    fetchUsers();
+    
+    // Refetch every 30 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchUsers();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchUsers]);
+
+  const updateRole = useCallback(async (userId: string, newRole: string) => {
+    setIsSubmitting(true);
+
+    try {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ role: newRole as 'free' | 'premium' | 'trainer' | 'admin' })
@@ -64,22 +82,22 @@ export const UserRoleManager: React.FC = () => {
       
       if (profileError) throw profileError;
 
-      return { userId, newRole };
-    },
-    onSuccess: ({ userId, newRole }) => {
       toast.success(`Rola użytkownika zmieniona na ${newRole}`);
       setPendingChanges(prev => {
         const next = { ...prev };
         delete next[userId];
         return next;
       });
-      queryClient.invalidateQueries({ queryKey: ['admin-users-roles'] });
-    },
-    onError: (error) => {
+      
+      // Refetch users after successful update
+      await fetchUsers();
+    } catch (error) {
       toast.error('Nie udało się zmienić roli');
       console.error('Role update error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-  });
+  }, [fetchUsers]);
 
   const handleRoleChange = (userId: string, newRole: string) => {
     setPendingChanges(prev => ({ ...prev, [userId]: newRole }));
@@ -88,7 +106,7 @@ export const UserRoleManager: React.FC = () => {
   const saveRoleChange = (userId: string) => {
     const newRole = pendingChanges[userId];
     if (newRole) {
-      updateRoleMutation.mutate({ userId, newRole });
+      updateRole(userId, newRole);
     }
   };
 
@@ -145,7 +163,7 @@ export const UserRoleManager: React.FC = () => {
         {/* Users List */}
         <ScrollArea className="h-[350px]">
           <div className="space-y-2">
-            {users?.map((user) => {
+            {users.map((user) => {
               const hasPendingChange = pendingChanges[user.id] !== undefined;
               const displayRole = pendingChanges[user.id] || user.role;
 
@@ -199,7 +217,7 @@ export const UserRoleManager: React.FC = () => {
                       size="icon"
                       className="h-8 w-8 text-yellow-400 hover:text-yellow-300"
                       onClick={() => saveRoleChange(user.id)}
-                      disabled={updateRoleMutation.isPending}
+                      disabled={isSubmitting}
                     >
                       <Save className="w-4 h-4" />
                     </Button>
@@ -208,7 +226,7 @@ export const UserRoleManager: React.FC = () => {
               );
             })}
 
-            {users?.length === 0 && (
+            {users.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 Nie znaleziono użytkowników
               </div>

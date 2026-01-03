@@ -4,11 +4,11 @@ import { Search } from 'lucide-react';
 import { useTrainingLibrary } from '@/hooks/useTrainingLibrary';
 import { useTrainingBookmarks } from '@/hooks/useTrainingBookmarks';
 import { useAuth } from '@/contexts/AuthContext';
-import TrainingLibraryCard from '@/components/TrainingLibraryCard';
-import TrainingLibraryFilters from '@/components/TrainingLibraryFilters';
+import { TrainingLibraryCard } from '@/components/TrainingLibraryCard';
+import { TrainingLibraryFilters } from '@/components/TrainingLibraryFilters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 
 const TrainingLibrary = () => {
   const { user } = useAuth();

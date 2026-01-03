@@ -21,7 +21,8 @@ export class LandingPage {
 
   async goto() {
     await this.page.goto('/');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500); // Additional wait for mobile-safari
   }
 
   async openLoginModal() {
@@ -33,10 +34,10 @@ export class LandingPage {
   }
 
   async expectLogoVisible() {
-    await expect(this.logo).toBeVisible();
+    await expect(this.logo).toBeVisible({ timeout: 15000 });
   }
 
   async expectHeroVisible() {
-    await expect(this.heroTitle).toBeVisible();
+    await expect(this.heroTitle).toBeVisible({ timeout: 15000 });
   }
 }

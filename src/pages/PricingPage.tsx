@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import PricingPlansModal from "@/components/PricingPlansModal";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 
 const PricingPage = () => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SportPathPurchaseModal from '../SportPathPurchaseModal';
+import { SportPathPurchaseModal } from '../SportPathPurchaseModal';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock supabase

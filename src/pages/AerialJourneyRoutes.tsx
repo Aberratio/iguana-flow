@@ -4,8 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSportGuardian } from "@/hooks/useSportGuardian";
 import AerialJourney from "./AerialJourney";
-import SkillTree from "@/components/SkillTree";
-import SportAdminPanel from "@/components/SportAdminPanel";
+import { SkillTree } from "@/components/SkillTree";
+import { SportAdminPanel } from "@/components/SportAdminPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 const AerialJourneyRoutes = () => {

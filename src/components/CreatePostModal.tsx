@@ -26,8 +26,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCreatePost } from "@/hooks/useCreatePost";
+import { fetchExercises } from "@/services/exercises";
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -54,24 +55,24 @@ export const CreatePostModal = ({
     null
   );
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedFigure, setSelectedFigure] = useState<any>(null);
   const [figureSearchTerm, setFigureSearchTerm] = useState("");
   const [availableFigures, setAvailableFigures] = useState([]);
   const [showFigureSearch, setShowFigureSearch] = useState(false);
   const { toast } = useToast();
-
+  const { createPost, isSubmitting } = useCreatePost();
 
   // Fetch available figures for selection
   const fetchFigures = async () => {
     try {
-      const { data: figures, error } = await supabase
-        .from("figures")
-        .select("id, name, difficulty_level, category, image_url")
-        .order("name", { ascending: true });
-
-      if (error) throw error;
-      setAvailableFigures(figures || []);
+      const figures = await fetchExercises({});
+      setAvailableFigures(figures.map(f => ({
+        id: f.id,
+        name: f.name,
+        difficulty_level: f.difficulty_level,
+        category: f.category,
+        image_url: f.image_url,
+      })));
     } catch (error) {
       console.error("Error fetching figures:", error);
     }
@@ -135,66 +136,23 @@ export const CreatePostModal = ({
       return;
     }
 
-    setIsLoading(true);
-    console.log("Starting post creation...", { user, content, selectedFile });
     try {
       // Call onBeforeSubmit callback if provided (e.g., to mark challenge day complete)
       if (onBeforeSubmit) {
         await onBeforeSubmit();
       }
-      let mediaUrl = null;
 
-      // Upload media file if selected
-      if (selectedFile) {
-        console.log("Uploading media file...", selectedFile);
-        const fileExt = selectedFile.name.split(".").pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("posts")
-          .upload(fileName, selectedFile);
-
-        if (uploadError) {
-          console.error("Error uploading file:", uploadError);
-          throw uploadError;
-        } else {
-          const { data } = supabase.storage
-            .from("posts")
-            .getPublicUrl(fileName);
-          mediaUrl = data.publicUrl;
-          console.log("Media uploaded successfully:", mediaUrl);
-        }
-      }
-
-      console.log("Creating post in database...");
-      // Create post in database
-      const { data: newPost, error } = await supabase
-        .from("posts")
-        .insert({
+      // Create post using hook
+      const newPost = await createPost(
+        {
           user_id: user.id,
           content,
           privacy,
-          image_url: mediaType === "image" ? mediaUrl : null,
-          video_url: mediaType === "video" ? mediaUrl : null,
           figure_id: selectedFigure?.id || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select(
-          `
-          *,
-          profiles (
-            id,
-            username,
-            avatar_url
-          )
-        `
-        )
-        .single();
-
-      if (error) {
-        throw error;
-      }
+        },
+        selectedFile || undefined,
+        selectedFile ? mediaType : undefined
+      );
 
       // Pass the raw post data to the callback
       onPostCreated(newPost);
@@ -216,8 +174,6 @@ export const CreatePostModal = ({
         description: error.message || "Nie udało się utworzyć posta",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -482,11 +438,11 @@ export const CreatePostModal = ({
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="text-sm"
                 variant="primary"
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     <span className="hidden sm:inline">Publikowanie...</span>

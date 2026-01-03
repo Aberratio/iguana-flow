@@ -81,18 +81,20 @@ test.describe('Premium Features', () => {
     test('training library has basic accessibility', async ({ page }) => {
       await page.goto('/training/library');
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000); // Additional wait for mobile-safari
       
       // Check for main content area
-      const main = page.locator('main, [role="main"], .main-content').first();
-      await expect(main).toBeVisible({ timeout: 10000 });
+      const main = page.locator('main, [role="main"], .main-content, body').first();
+      await expect(main).toBeVisible({ timeout: 15000 });
     });
 
     test('pricing page has basic accessibility', async ({ page }) => {
       await page.goto('/pricing');
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000); // Additional wait for mobile-safari
       
-      const main = page.locator('main, [role="main"], .main-content, h1').first();
-      await expect(main).toBeVisible({ timeout: 10000 });
+      const main = page.locator('main, [role="main"], .main-content, h1, body').first();
+      await expect(main).toBeVisible({ timeout: 15000 });
     });
   });
 

@@ -1,28 +1,50 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
+import { fetchLandingSections } from '@/services/landing';
+
+interface LandingSections {
+  features?: { section_key: string; is_active: boolean };
+  gallery?: { section_key: string; is_active: boolean };
+  pricing?: { section_key: string; is_active: boolean };
+  cta?: { section_key: string; is_active: boolean };
+  instagram_feed?: { section_key: string; is_active: boolean };
+}
 
 export const useLandingSections = () => {
-  return useQuery({
-    queryKey: ['landing-sections'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('landing_page_sections')
-        .select('section_key, is_active');
-      
-      if (error) throw error;
+  const [data, setData] = useState<LandingSections | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-      const sectionsMap = data?.reduce((acc, section) => {
-        acc[section.section_key] = section;
-        return acc;
-      }, {} as Record<string, { section_key: string; is_active: boolean }>);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-      return {
-        features: sectionsMap?.['features'],
-        gallery: sectionsMap?.['gallery'],
-        pricing: sectionsMap?.['pricing'],
-        cta: sectionsMap?.['cta'],
-        instagram_feed: sectionsMap?.['instagram_feed'],
-      };
+    try {
+      const sectionsMap = await fetchLandingSections();
+
+      setData({
+        features: sectionsMap['features'],
+        gallery: sectionsMap['gallery'],
+        pricing: sectionsMap['pricing'],
+        cta: sectionsMap['cta'],
+        instagram_feed: sectionsMap['instagram_feed'],
+      });
+    } catch (err) {
+      const fetchError = err instanceof Error ? err : new Error('Unknown error');
+      setError(fetchError);
+      console.error('Error fetching landing sections:', fetchError);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchData,
+  };
 };

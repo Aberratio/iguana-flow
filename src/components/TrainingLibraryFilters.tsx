@@ -281,4 +281,4 @@ const TrainingLibraryFilters: React.FC<TrainingLibraryFiltersProps> = ({
   );
 };
 
-export default TrainingLibraryFilters;
+export { TrainingLibraryFilters };

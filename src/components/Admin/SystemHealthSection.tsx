@@ -1,5 +1,4 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,9 +22,12 @@ interface HealthCheck {
 }
 
 export const SystemHealthSection: React.FC = () => {
-  const { data: healthChecks, isLoading } = useQuery({
-    queryKey: ['admin-system-health'],
-    queryFn: async () => {
+  const [healthChecks, setHealthChecks] = useState<HealthCheck[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchHealthChecks = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const checks: HealthCheck[] = [];
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -124,10 +126,25 @@ export const SystemHealthSection: React.FC = () => {
         });
       }
 
-      return checks;
-    },
-    refetchInterval: 60000
-  });
+      setHealthChecks(checks);
+    } catch (err) {
+      console.error('Error fetching health checks:', err);
+      setHealthChecks([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHealthChecks();
+    
+    // Refetch every 60 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchHealthChecks();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [fetchHealthChecks]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -175,9 +192,9 @@ export const SystemHealthSection: React.FC = () => {
     );
   }
 
-  const overallStatus = healthChecks?.some(c => c.status === 'error')
+  const overallStatus = healthChecks.some(c => c.status === 'error')
     ? 'error'
-    : healthChecks?.some(c => c.status === 'warning')
+    : healthChecks.some(c => c.status === 'warning')
     ? 'warning'
     : 'ok';
 
@@ -202,7 +219,7 @@ export const SystemHealthSection: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {healthChecks?.map((check, index) => (
+          {healthChecks.map((check, index) => (
             <div
               key={index}
               className={`flex items-center gap-3 p-3 rounded-lg border ${getStatusBg(check.status)}`}

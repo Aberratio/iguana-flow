@@ -31,7 +31,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useDictionary } from "@/contexts/DictionaryContext";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 
 interface Challenge {
   id: string;

@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card';
 import { ArrowLeft, Clock, Play, Heart, Lock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { TrainingLibrary } from '@/hooks/useTrainingLibrary';
+import { logError } from '@/lib/errorHandler';
 
 interface TrainingExercise {
   id: string;
@@ -75,8 +76,8 @@ const TrainingLibraryDetail = () => {
         if (exercisesError) throw exercisesError;
         setExercises((exercisesData || []) as TrainingExercise[]);
       }
-    } catch (error) {
-      console.error('Error fetching training:', error);
+    } catch (error: unknown) {
+      logError(error, { component: 'TrainingLibraryDetail', action: 'fetchTraining' });
     } finally {
       setIsLoading(false);
     }

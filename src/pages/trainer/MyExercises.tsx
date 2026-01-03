@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { logError } from '@/lib/errorHandler';
 import { 
   Plus, 
   Search, 
@@ -38,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 
 interface Exercise {
   id: string;
@@ -97,8 +98,8 @@ const MyExercises: React.FC = () => {
 
       if (error) throw error;
       setExercises(data || []);
-    } catch (err: any) {
-      console.error('Error fetching exercises:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MyExercises', action: 'fetchExercises' });
       toast.error('Błąd podczas pobierania ćwiczeń');
     } finally {
       setIsLoading(false);
@@ -121,8 +122,8 @@ const MyExercises: React.FC = () => {
 
       toast.success(isArchived ? 'Przywrócono ćwiczenie' : 'Zarchiwizowano ćwiczenie');
       fetchExercises();
-    } catch (err: any) {
-      console.error('Error archiving exercise:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MyExercises', action: 'archiveExercise' });
       toast.error('Błąd podczas archiwizacji');
     } finally {
       setArchiveDialogOpen(false);
@@ -180,7 +181,7 @@ const MyExercises: React.FC = () => {
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+          <Select value={statusFilter} onValueChange={(v: string) => setStatusFilter(v)}>
             <SelectTrigger className="w-40">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue />

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { logError } from '@/lib/errorHandler';
 import { 
   Shield, 
   Eye, 
@@ -20,7 +21,7 @@ import {
   ChevronRight,
   Dumbbell
 } from 'lucide-react';
-import SEO from '@/components/SEO';
+import { SEO } from '@/components/SEO';
 
 interface SportDetails {
   id: string;
@@ -82,8 +83,8 @@ const MySports: React.FC = () => {
       );
 
       setSports(sportsWithDetails);
-    } catch (err) {
-      console.error('Error fetching sport details:', err);
+    } catch (err: unknown) {
+      logError(err, { component: 'MySports', action: 'fetchSportDetails' });
       toast.error('Błąd podczas pobierania danych sportów');
     } finally {
       setLoading(false);
