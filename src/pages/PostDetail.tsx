@@ -10,86 +10,34 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { formatDistanceToNow } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 import { SharePostModal } from '@/components/SharePostModal';
 import { PricingModal } from '@/components/PricingModal';
+import { usePost } from '@/hooks/usePost';
+import { usePostActions } from '@/hooks/usePostActions';
 
 const PostDetail = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [post, setPost] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const { comments, loading: commentsLoading, addComment } = usePostComments(postId || null);
   const { hasPremiumAccess } = useSubscriptionStatus();
+  const { post, isLoading: loading, error, refetch } = usePost(postId || null, user?.id);
+  const { toggleLike: handleToggleLike, toggleSave: handleToggleSave } = usePostActions();
 
   useEffect(() => {
-    if (postId) {
-      fetchPost();
-    }
-  }, [postId]);
-
-  const fetchPost = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:profiles!posts_user_id_fkey (
-            id,
-            username,
-            avatar_url,
-            role
-          ),
-          figure:figures (
-            id,
-            name
-          )
-        `)
-        .eq('id', postId)
-        .single();
-
-      if (error) throw error;
-
-      // Get likes count and check if current user liked it
-      const { data: likesData } = await supabase
-        .from('post_likes')
-        .select('user_id')
-        .eq('post_id', postId);
-
-      // Check if current user saved this post
-      const { data: savedData } = await supabase
-        .from('saved_posts')
-        .select('user_id')
-        .eq('post_id', postId)
-        .eq('user_id', user?.id || '');
-
-      // Process the data to get proper counts and flags
-      const processedPost = {
-        ...data,
-        likes_count: likesData?.length || 0,
-        is_liked: likesData?.some((like: any) => like.user_id === user?.id) || false,
-        is_saved: savedData && savedData.length > 0
-      };
-
-      setPost(processedPost);
-    } catch (error: any) {
-      console.error('Error fetching post:', error);
+    if (error) {
       toast({
         title: "Error",
         description: "Failed to load post",
         variant: "destructive"
       });
       navigate('/feed');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error, toast, navigate]);
 
   const handleSubmitComment = async () => {
     if (newComment.trim()) {
@@ -104,31 +52,16 @@ const PostDetail = () => {
     if (!user || !post) return;
 
     try {
-      if (post.is_liked) {
-        await supabase
-          .from('post_likes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user.id);
-
-        setPost(prev => ({
-          ...prev,
-          is_liked: false,
-          likes_count: prev.likes_count - 1
-        }));
-      } else {
-        await supabase
-          .from('post_likes')
-          .insert({ post_id: post.id, user_id: user.id });
-
-        setPost(prev => ({
-          ...prev,
-          is_liked: true,
-          likes_count: prev.likes_count + 1
-        }));
-      }
+      await handleToggleLike(post.id, user.id, (result) => {
+        refetch();
+      });
     } catch (error) {
       console.error('Error toggling like:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update like",
+        variant: "destructive"
+      });
     }
   };
 
@@ -136,29 +69,16 @@ const PostDetail = () => {
     if (!user || !post) return;
 
     try {
-      if (post.is_saved) {
-        await supabase
-          .from('saved_posts')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user.id);
-
-        setPost(prev => ({
-          ...prev,
-          is_saved: false
-        }));
-      } else {
-        await supabase
-          .from('saved_posts')
-          .insert({ post_id: post.id, user_id: user.id });
-
-        setPost(prev => ({
-          ...prev,
-          is_saved: true
-        }));
-      }
+      await handleToggleSave(post.id, user.id, () => {
+        refetch();
+      });
     } catch (error) {
       console.error('Error toggling save:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update save",
+        variant: "destructive"
+      });
     }
   };
 

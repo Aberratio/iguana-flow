@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchLandingSections } from '@/services/landing';
 
 interface LandingSections {
   features?: { section_key: string; is_active: boolean };
@@ -19,16 +19,7 @@ export const useLandingSections = () => {
     setError(null);
 
     try {
-      const { data: result, error: fetchError } = await supabase
-        .from('landing_page_sections')
-        .select('section_key, is_active');
-      
-      if (fetchError) throw fetchError;
-
-      const sectionsMap = result?.reduce((acc, section) => {
-        acc[section.section_key] = section;
-        return acc;
-      }, {} as Record<string, { section_key: string; is_active: boolean }>) || {};
+      const sectionsMap = await fetchLandingSections();
 
       setData({
         features: sectionsMap['features'],
