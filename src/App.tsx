@@ -2,7 +2,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UpdateBanner } from "@/components/UpdateBanner";
 import { OfflineNotification } from "@/components/OfflineNotification";
@@ -62,17 +61,6 @@ import MyChallenges from "@/pages/trainer/MyChallenges";
 import MyExercises from "@/pages/trainer/MyExercises";
 import MySports from "@/pages/trainer/MySports";
 
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 5 * 60 * 1000,
-      networkMode: 'offlineFirst',
-    },
-  },
-});
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -536,19 +524,17 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <OfflineNotification />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <UpdateBanner />
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <TooltipProvider>
+      <OfflineNotification />
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <UpdateBanner />
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   );
 };
 

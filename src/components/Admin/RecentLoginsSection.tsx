@@ -1,5 +1,4 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -25,10 +24,12 @@ interface RecentUser {
 
 export const RecentLoginsSection: React.FC = () => {
   const { impersonateUser } = useAuth();
+  const [recentLogins, setRecentLogins] = useState<RecentUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: recentLogins, isLoading } = useQuery({
-    queryKey: ['admin-recent-logins'],
-    queryFn: async () => {
+  const fetchRecentLogins = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, email, avatar_url, role, last_login_at, login_count')
@@ -37,10 +38,25 @@ export const RecentLoginsSection: React.FC = () => {
         .limit(20);
 
       if (error) throw error;
-      return data as RecentUser[];
-    },
-    refetchInterval: 30000
-  });
+      setRecentLogins(data as RecentUser[] || []);
+    } catch (err) {
+      console.error('Error fetching recent logins:', err);
+      setRecentLogins([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentLogins();
+    
+    // Refetch every 30 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchRecentLogins();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchRecentLogins]);
 
   const handleImpersonate = async (userId: string, username: string) => {
     try {
@@ -87,14 +103,14 @@ export const RecentLoginsSection: React.FC = () => {
           <Clock className="w-5 h-5" />
           Ostatnio zalogowani
           <Badge variant="secondary" className="ml-auto">
-            {recentLogins?.length || 0}
+            {recentLogins.length}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[400px] px-4 pb-4">
           <div className="space-y-2">
-            {recentLogins?.map((user) => (
+            {recentLogins.map((user) => (
               <div
                 key={user.id}
                 className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors"

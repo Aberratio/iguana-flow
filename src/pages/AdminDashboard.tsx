@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   LayoutDashboard, 
@@ -32,9 +31,12 @@ import { UserRoleManager } from '@/components/Admin/UserRoleManager';
 import { SportGuardiansManager } from '@/components/Admin/SportGuardiansManager';
 
 export default function AdminDashboard() {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: async () => {
+  const [stats, setStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayIso = today.toISOString();
@@ -137,9 +139,25 @@ export default function AdminDashboard() {
         // Aerial Journey
         figureCompletions: figureCompletions || 0
       };
-    },
-    refetchInterval: 30000
-  });
+      
+      setStats(result);
+    } catch (err) {
+      console.error('Error fetching admin stats:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+    
+    // Refetch every 30 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchStats]);
 
   const quickActions = [
     {

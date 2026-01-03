@@ -1,5 +1,4 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +16,12 @@ interface TopUser {
 }
 
 export const TopUsersSection: React.FC = () => {
-  const { data: topUsers, isLoading } = useQuery({
-    queryKey: ['admin-top-users'],
-    queryFn: async () => {
+  const [topUsers, setTopUsers] = useState<TopUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchTopUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, email, avatar_url, role, login_count')
@@ -28,10 +30,25 @@ export const TopUsersSection: React.FC = () => {
         .limit(5);
 
       if (error) throw error;
-      return data as TopUser[];
-    },
-    refetchInterval: 60000
-  });
+      setTopUsers(data as TopUser[] || []);
+    } catch (err) {
+      console.error('Error fetching top users:', err);
+      setTopUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTopUsers();
+    
+    // Refetch every 60 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchTopUsers();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [fetchTopUsers]);
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -75,7 +92,7 @@ export const TopUsersSection: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {topUsers?.map((user, index) => (
+          {topUsers.map((user, index) => (
             <div
               key={user.id}
               className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors"

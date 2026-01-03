@@ -6,66 +6,109 @@ Use the appropriate state management solution for each type of state.
 
 ## 1. State Categories
 
-### Server State (TanStack Query)
-**MANDATORY**: Use TanStack Query for ALL server data.
+### Server State (Custom Hooks with useState/useEffect)
+**MANDATORY**: Use custom hooks with useState/useEffect for ALL server data.
 
 **What is Server State:**
 - Data from Supabase database
 - Data from API calls
-- Data that needs to be cached
-- Data that needs background refetching
-- Data shared across components
+- Data fetched from external sources
+- Data that needs to be refreshed
 
-**Example:**
+**Example Pattern:**
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-// ✅ Fetching server data
+// ✅ Fetching server data with custom hook
 export const useFeedPosts = () => {
-  return useQuery({
-    queryKey: ['feedPosts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchPosts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: fetchError } = await supabase
         .from('posts')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
-    },
-  });
+      if (fetchError) throw fetchError;
+
+      // Map and transform data if needed
+      const mapped = (data || []).map(post => ({
+        ...post,
+        // custom transformations
+      }));
+
+      setPosts(mapped);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      console.error('Error fetching posts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  return {
+    posts,
+    isLoading,
+    error,
+    refetch: fetchPosts,
+  };
 };
 
 // ✅ Mutating server data
 export const useCreatePost = () => {
-  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  return useMutation({
-    mutationFn: async (postData: PostData) => {
-      const { data, error } = await supabase
+  const createPost = useCallback(async (postData: PostData) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { data, error: createError } = await supabase
         .from('posts')
         .insert(postData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (createError) throw createError;
       return data;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ['feedPosts'] });
-    },
-  });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      console.error('Error creating post:', error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return {
+    createPost,
+    isSubmitting,
+    error,
+  };
 };
 ```
 
 **Rules:**
-- NEVER use `useState` for server data
-- Always use TanStack Query for Supabase queries
-- Use proper query keys for cache management
-- Invalidate queries after mutations
-- Handle loading and error states
+- Use `useState` + `useEffect` + `useCallback` for server data
+- Always handle loading and error states
+- Use `useCallback` to memoize fetch functions
+- Provide `refetch` function for manual refresh
+- Map and transform data in the hook for clean component usage
+- Handle errors gracefully with user-friendly messages
 
 ### Client State (React Hooks)
 **MANDATORY**: Use React hooks for local component state.
@@ -128,93 +171,131 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 ```
 
 **DO NOT Use Context For:**
-- Server data (use TanStack Query)
+- Server data (use custom hooks with useState/useEffect)
 - Component-specific state (use useState)
 - Frequently changing state (causes re-renders)
 - Derived state (compute in component)
 
-## 2. TanStack Query Patterns
+## 2. Custom Hook Patterns for Server Data
 
-### Query Keys
-**REQUIRED**: Use consistent, hierarchical query keys.
-
-```typescript
-// ✅ Hierarchical query keys
-const queryKeys = {
-  posts: {
-    all: ['posts'] as const,
-    lists: () => [...queryKeys.posts.all, 'list'] as const,
-    list: (filters: PostFilters) => [...queryKeys.posts.lists(), filters] as const,
-    details: () => [...queryKeys.posts.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.posts.details(), id] as const,
-  },
-};
-
-// Usage
-useQuery({
-  queryKey: queryKeys.posts.list({ category: 'fitness' }),
-  queryFn: () => fetchPosts({ category: 'fitness' }),
-});
-```
-
-### Cache Invalidation
-**REQUIRED**: Invalidate queries after mutations.
+### Standard Fetch Pattern
+**REQUIRED**: Follow consistent pattern for all data fetching hooks.
 
 ```typescript
-export const useCreatePost = () => {
-  const queryClient = useQueryClient();
+export const useCustomData = (filters?: Filters) => {
+  const [data, setData] = useState<DataType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  return useMutation({
-    mutationFn: createPost,
-    onSuccess: () => {
-      // Invalidate all post queries
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-      // Or invalidate specific query
-      queryClient.invalidateQueries({ 
-        queryKey: ['posts', 'list'] 
-      });
-    },
-  });
-};
-```
+    try {
+      let query = supabase
+        .from('table')
+        .select('*');
 
-### Optimistic Updates
-**USE CAREFULLY**: Only use when you can rollback.
+      // Apply filters if provided
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
 
-```typescript
-export const useLikePost = () => {
-  const queryClient = useQueryClient();
+      const { data: result, error: fetchError } = await query;
 
-  return useMutation({
-    mutationFn: likePost,
-    onMutate: async (postId) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['posts', postId] });
+      if (fetchError) throw fetchError;
 
-      // Snapshot previous value
-      const previousPost = queryClient.getQueryData(['posts', postId]);
-
-      // Optimistically update
-      queryClient.setQueryData(['posts', postId], (old: Post) => ({
-        ...old,
-        likes: old.likes + 1,
-        isLiked: true,
+      // Map and transform data
+      const mapped = (result || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        // custom transformations
       }));
 
-      return { previousPost };
-    },
-    onError: (err, postId, context) => {
-      // Rollback on error
-      if (context?.previousPost) {
-        queryClient.setQueryData(['posts', postId], context.previousPost);
-      }
-    },
-    onSettled: (postId) => {
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['posts', postId] });
-    },
-  });
+      setData(mapped);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters?.category]); // Dependencies for refetch
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchData,
+  };
+};
+```
+
+### Mutation Pattern
+**REQUIRED**: Handle mutations with proper error handling.
+
+```typescript
+export const useCreateItem = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const createItem = useCallback(async (itemData: ItemData) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { data, error: createError } = await supabase
+        .from('items')
+        .insert(itemData)
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      return data;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      console.error('Error creating item:', error);
+      throw error; // Re-throw for component handling
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return {
+    createItem,
+    isSubmitting,
+    error,
+  };
+};
+```
+
+### Refetch After Mutation
+**REQUIRED**: Manually refetch data after mutations when needed.
+
+```typescript
+export const MyComponent = () => {
+  const { data, refetch } = useCustomData();
+  const { createItem } = useCreateItem();
+
+  const handleCreate = async (itemData: ItemData) => {
+    try {
+      await createItem(itemData);
+      // Refetch data after successful creation
+      await refetch();
+      toast.success('Item created successfully');
+    } catch (error) {
+      toast.error('Failed to create item');
+    }
+  };
+
+  return (
+    // Component JSX
+  );
 };
 ```
 
@@ -381,17 +462,16 @@ export const SimpleComponent = React.memo(({ text }: { text: string }) => {
 Before implementing state:
 
 - [ ] Identified state type (server, client, global)
-- [ ] Using correct tool (TanStack Query, useState, Context)
+- [ ] Using correct tool (custom hooks with useState/useEffect, useState, Context)
 - [ ] State is colocated appropriately
 - [ ] Derived state is computed, not stored
-- [ ] Cache invalidation implemented for mutations
+- [ ] Refetch implemented after mutations when needed
 - [ ] Loading and error states handled
-- [ ] Performance optimizations applied where needed
+- [ ] Performance optimizations applied where needed (useCallback, useMemo)
 - [ ] No unnecessary re-renders
 
 ## References
 
-- TanStack Query: `@tanstack/react-query`
 - Auth Context: `src/contexts/AuthContext.tsx`
-- Hook examples: `src/hooks/useUserRole.ts`, `src/hooks/useAuthState.ts`
+- Hook examples: `src/hooks/useUserRole.ts`, `src/hooks/useAuthState.ts`, `src/hooks/useFeedPosts.ts`
 

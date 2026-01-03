@@ -1,10 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface LandingData {
+  sections: Record<string, any>;
+  gallery: any[];
+  pricing: any[];
+}
+
 export const useLandingData = () => {
-  return useQuery({
-    queryKey: ['landing-all-data'],
-    queryFn: async () => {
+  const [data, setData] = useState<LandingData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
       const [sectionsResult, galleryResult, pricingResult] = await Promise.all([
         supabase
           .from('landing_page_sections')
@@ -37,15 +49,30 @@ export const useLandingData = () => {
       const sections = sectionsResult.data?.reduce((acc, section) => {
         acc[section.section_key] = section;
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, any>) || {};
 
-      return {
+      setData({
         sections,
         gallery: galleryResult.data || [],
         pricing: pricingResult.data || [],
-      };
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
+      });
+    } catch (err) {
+      const fetchError = err instanceof Error ? err : new Error('Unknown error');
+      setError(fetchError);
+      console.error('Error fetching landing data:', fetchError);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchData,
+  };
 };

@@ -1,39 +1,62 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+interface RecentUser {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+}
+
 export const SocialProof: React.FC = () => {
-  const { data: recentUsers } = useQuery({
-    queryKey: ['recent-signups'],
-    queryFn: async () => {
-      const { data } = await supabase
+  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
+  const [weeklyCount, setWeeklyCount] = useState<number>(12);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchRecentUsers = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
         .order('created_at', { ascending: false })
         .limit(5);
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
 
-  const { data: weeklyCount } = useQuery({
-    queryKey: ['weekly-signups'],
-    queryFn: async () => {
+      if (error) throw error;
+      setRecentUsers(data || []);
+    } catch (err) {
+      console.error('Error fetching recent users:', err);
+      setRecentUsers([]);
+    }
+  }, []);
+
+  const fetchWeeklyCount = useCallback(async () => {
+    try {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .gte('created_at', weekAgo.toISOString());
       
-      return count || 12;
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+      if (error) throw error;
+      setWeeklyCount(count || 12);
+    } catch (err) {
+      console.error('Error fetching weekly count:', err);
+      setWeeklyCount(12);
+    }
+  }, []);
 
-  if (!recentUsers || recentUsers.length === 0) return null;
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchRecentUsers(), fetchWeeklyCount()]);
+      setIsLoading(false);
+    };
+    fetchData();
+  }, [fetchRecentUsers, fetchWeeklyCount]);
+
+  if (isLoading || !recentUsers || recentUsers.length === 0) return null;
 
   return (
     <div className="flex items-center justify-center lg:justify-start gap-2 mt-6">

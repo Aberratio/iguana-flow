@@ -71,68 +71,100 @@ export const useBadHook = () => {
 };
 ```
 
-### 2. Data Layer (TanStack Query + Supabase)
-**Location**: Custom hooks that use TanStack Query
+### 2. Data Layer (Custom Hooks with Supabase)
+**Location**: Custom hooks using useState/useEffect pattern
 
 **Responsibilities:**
 - Fetching data from Supabase
-- Caching server state
+- Data transformation and mapping
 - Mutations (create, update, delete)
-- Query invalidation
-- Optimistic updates
+- Error handling
+- Loading state management
 
 **Rules:**
-- Use TanStack Query for ALL server data
-- Never use useState for server data
+- Use custom hooks with useState/useEffect for ALL server data
 - Always handle loading and error states
-- Use proper query keys for cache management
-- Invalidate queries after mutations
+- Map and transform data in hooks for clean component usage
+- Use useCallback to memoize fetch functions
+- Provide refetch function for manual refresh
 
 **Example Pattern:**
 ```typescript
 // src/hooks/useFeedPosts.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useFeedPosts = () => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['feedPosts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchPosts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: fetchError } = await supabase
         .from('posts')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
-    },
-  });
+      if (fetchError) throw fetchError;
 
-  return { posts: data, isLoading, error };
+      // Map and transform data
+      const mapped = (data || []).map(post => ({
+        ...post,
+        // custom transformations
+      }));
+
+      setPosts(mapped);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      console.error('Error fetching posts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  return { posts, isLoading, error, refetch: fetchPosts };
 };
 ```
 
 **Mutation Pattern:**
 ```typescript
 export const useCreatePost = () => {
-  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  return useMutation({
-    mutationFn: async (postData: PostData) => {
-      const { data, error } = await supabase
+  const createPost = useCallback(async (postData: PostData) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { data, error: createError } = await supabase
         .from('posts')
         .insert(postData)
         .select()
         .single();
       
-      if (error) throw error;
+      if (createError) throw createError;
       return data;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ['feedPosts'] });
-    },
-  });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      console.error('Error creating post:', error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { createPost, isSubmitting, error };
 };
 ```
 

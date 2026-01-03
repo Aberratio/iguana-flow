@@ -1,5 +1,4 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow, format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -45,9 +44,12 @@ interface OrderStats {
 }
 
 export const OrdersSection: React.FC = () => {
-  const { data: orders, isLoading: ordersLoading } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: async () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [stats, setStats] = useState<OrderStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchOrders = useCallback(async () => {
+    try {
       // Get orders
       const { data: ordersData, error } = await supabase
         .from('orders')
@@ -66,22 +68,27 @@ export const OrdersSection: React.FC = () => {
       
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       
-      return ordersData?.map(order => ({
+      const mappedOrders = ordersData?.map(order => ({
         ...order,
         profile: order.user_id ? profileMap.get(order.user_id) : undefined
       })) as Order[];
-    },
-    refetchInterval: 30000
-  });
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['admin-order-stats'],
-    queryFn: async () => {
-      const { data: allOrders } = await supabase
+      setOrders(mappedOrders || []);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setOrders([]);
+    }
+  }, []);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const { data: allOrders, error } = await supabase
         .from('orders')
         .select('status, amount');
 
-      const stats: OrderStats = {
+      if (error) throw error;
+
+      const orderStats: OrderStats = {
         pending: 0,
         completed: 0,
         failed: 0,
@@ -91,20 +98,38 @@ export const OrdersSection: React.FC = () => {
 
       allOrders?.forEach(order => {
         if (order.status === 'pending') {
-          stats.pending++;
-          stats.pendingAmount += order.amount || 0;
+          orderStats.pending++;
+          orderStats.pendingAmount += order.amount || 0;
         } else if (order.status === 'completed') {
-          stats.completed++;
-          stats.completedAmount += order.amount || 0;
+          orderStats.completed++;
+          orderStats.completedAmount += order.amount || 0;
         } else if (order.status === 'failed') {
-          stats.failed++;
+          orderStats.failed++;
         }
       });
 
-      return stats;
-    },
-    refetchInterval: 30000
-  });
+      setStats(orderStats);
+    } catch (err) {
+      console.error('Error fetching order stats:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchOrders(), fetchStats()]);
+      setIsLoading(false);
+    };
+    
+    fetchData();
+    
+    // Refetch every 30 seconds (similar to refetchInterval)
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchOrders, fetchStats]);
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
@@ -143,8 +168,6 @@ export const OrdersSection: React.FC = () => {
     const formatted = (amount / 100).toFixed(2);
     return currency === 'pln' ? `${formatted} zł` : `$${formatted}`;
   };
-
-  const isLoading = ordersLoading || statsLoading;
 
   if (isLoading) {
     return (
@@ -234,7 +257,7 @@ export const OrdersSection: React.FC = () => {
         {/* Recent Orders List */}
         <ScrollArea className="h-[280px]">
           <div className="space-y-2">
-            {orders?.map((order) => (
+            {orders.map((order) => (
               <div
                 key={order.id}
                 className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors"
@@ -285,7 +308,7 @@ export const OrdersSection: React.FC = () => {
               </div>
             ))}
 
-            {orders?.length === 0 && (
+            {orders.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 Brak zamówień
               </div>

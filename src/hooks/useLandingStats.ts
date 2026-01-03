@@ -1,10 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface LandingStats {
+  athletes: string;
+  figures: string;
+  challenges: string;
+  successRate: string;
+}
+
 export const useLandingStats = () => {
-  return useQuery({
-    queryKey: ['landing-stats'],
-    queryFn: async () => {
+  const [data, setData] = useState<LandingStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
       const [profilesResult, figuresResult, challengesResult, completedResult] = await Promise.all([
         supabase
           .from('profiles')
@@ -30,14 +43,29 @@ export const useLandingStats = () => {
       // Calculate success rate
       const successRate = athletes > 0 ? Math.round((completed / athletes) * 100) : 95;
 
-      return {
+      setData({
         athletes: `${athletes}+`,
         figures: `${figures}+`,
         challenges: `${challenges}+`,
         successRate: `${Math.min(successRate, 95)}%`,
-      };
-    },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000,
-  });
+      });
+    } catch (err) {
+      const fetchError = err instanceof Error ? err : new Error('Unknown error');
+      setError(fetchError);
+      console.error('Error fetching landing stats:', fetchError);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchData,
+  };
 };
