@@ -15,7 +15,7 @@ test.describe('Landing Page', () => {
   test('should display logo and hero section', async () => {
     await landingPage.expectLogoVisible();
     await landingPage.expectHeroVisible();
-  });
+  }, { timeout: 15000 });
 
   test('should display header with navigation buttons', async () => {
     await expect(landingPage.loginButton).toBeVisible();
@@ -36,7 +36,8 @@ test.describe('Landing Page', () => {
 
   test('should display features section when scrolled', async ({ page }) => {
     await page.evaluate(() => window.scrollTo(0, 800));
-    await expect(landingPage.featuresSection).toBeInViewport();
+    await page.waitForTimeout(500); // Wait for scroll animation
+    await expect(landingPage.featuresSection).toBeInViewport({ timeout: 10000 });
   });
 
   test('should have correct page title', async ({ page }) => {

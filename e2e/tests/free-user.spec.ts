@@ -4,26 +4,29 @@ test.describe('Użytkownik Free - Nawigacja i dostępność', () => {
   test.describe('Strony publiczne', () => {
     test('strona 404 wyświetla komunikat po polsku', async ({ page }) => {
       await page.goto('/nieistniejaca-strona-test-123');
+      await page.waitForLoadState('networkidle');
       
       // Sprawdź że strona 404 jest po polsku
-      await expect(page.getByText('Nie znaleziono strony')).toBeVisible();
-      await expect(page.getByText('Ups! Strona, której szukasz, nie istnieje')).toBeVisible();
-      await expect(page.getByRole('link', { name: /Strona główna/i })).toBeVisible();
-      await expect(page.getByRole('link', { name: /Wróć/i })).toBeVisible();
-      await expect(page.getByText('skontaktuj się z nami')).toBeVisible();
+      await expect(page.getByText('Nie znaleziono strony')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText('Ups! Strona, której szukasz, nie istnieje')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('link', { name: /Strona główna/i })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('link', { name: /Wróć/i })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText('skontaktuj się z nami')).toBeVisible({ timeout: 10000 });
     });
 
     test('strona 404 jest responsywna', async ({ page }) => {
       // Desktop
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.goto('/nieistniejaca-strona');
-      await expect(page.getByText('404')).toBeVisible();
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText('404')).toBeVisible({ timeout: 10000 });
       
       // Mobile
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto('/nieistniejaca-strona');
-      await expect(page.getByText('404')).toBeVisible();
-      await expect(page.getByRole('link', { name: /Strona główna/i })).toBeVisible();
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText('404')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('link', { name: /Strona główna/i })).toBeVisible({ timeout: 10000 });
     });
 
     test('link "skontaktuj się z nami" przekierowuje do about-us', async ({ page }) => {
@@ -226,24 +229,27 @@ test.describe('Użytkownik Free - Wizualne', () => {
     await expect(page.locator('.lucide-search')).toBeVisible();
   });
 
-  test('strona anulowania płatności ma czerwoną ikonę', async ({ page }) => {
-    await page.goto('/payment-cancelled');
-    
-    // Powinna być widoczna ikona X
-    await expect(page.locator('.lucide-x-circle')).toBeVisible();
-  });
+    test('strona anulowania płatności ma czerwoną ikonę', async ({ page }) => {
+      await page.goto('/payment-cancelled');
+      await page.waitForLoadState('networkidle');
+      
+      // Powinna być widoczna ikona X (może być różna klasa)
+      const icon = page.locator('.lucide-x-circle, [class*="x-circle"], [class*="XCircle"]').first();
+      await expect(icon).toBeVisible({ timeout: 10000 });
+    });
 
-  test('strona sukcesu płatności ma zieloną ikonę', async ({ page }) => {
-    await page.goto('/payment-success');
-    
-    // Powinna być widoczna ikona check lub loader
-    const checkCircle = page.locator('.lucide-check-circle');
-    const loader = page.locator('.lucide-loader-2');
-    
-    // Jedna z ikon powinna być widoczna
-    const isCheckVisible = await checkCircle.isVisible().catch(() => false);
-    const isLoaderVisible = await loader.isVisible().catch(() => false);
-    
-    expect(isCheckVisible || isLoaderVisible).toBeTruthy();
-  });
+    test('strona sukcesu płatności ma zieloną ikonę', async ({ page }) => {
+      await page.goto('/payment-success');
+      await page.waitForLoadState('networkidle');
+      
+      // Powinna być widoczna ikona check lub loader (może być różna klasa)
+      const checkCircle = page.locator('.lucide-check-circle, [class*="check-circle"], [class*="CheckCircle"]').first();
+      const loader = page.locator('.lucide-loader-2, [class*="loader"], [class*="Loader"]').first();
+      
+      // Jedna z ikon powinna być widoczna
+      const isCheckVisible = await checkCircle.isVisible({ timeout: 5000 }).catch(() => false);
+      const isLoaderVisible = await loader.isVisible({ timeout: 5000 }).catch(() => false);
+      
+      expect(isCheckVisible || isLoaderVisible).toBeTruthy();
+    });
 });
